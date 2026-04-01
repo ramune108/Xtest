@@ -7,48 +7,36 @@
     <title>Save - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-    <header class="site-header">
-        <a href="index.html">Twitter Video Tools</a>
-    </header>
+    <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
     <main class="input-container">
-        <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Paste Tweet URL to Save</p>
-        <input type="text" id="tweetUrl" class="text-input" placeholder="https://x.com/user/status/...">
-        <button id="extractBtn" class="primary-btn" onclick="extractVideo()">
-            <i class="fas fa-file-download"></i> Extract Video
-        </button>
+        <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Save Twitter Video</p>
+        <input type="text" id="tweetUrl" class="text-input" placeholder="Paste Tweet URL here...">
+        <button id="extractBtn" class="primary-btn" onclick="extractVideo()"><i class="fas fa-file-download"></i> Extract Video</button>
         <div id="results"></div>
     </main>
 
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
-        <a href="search.html" class="nav-item"><i class="fas fa-search nav-icon"></i>Search</a>
-        <a href="save.html" class="nav-item active"><i class="fas fa-plus-circle nav-icon"></i>Save</a>
+        <a href="index.html" class="nav-item"><i class="fas fa-trophy" style="font-size:18px;"></i>Ranking</a>
+        <a href="search.html" class="nav-item"><i class="fas fa-search" style="font-size:18px;"></i>Search</a>
+        <a href="save.html" class="nav-item active"><i class="fas fa-plus-circle" style="font-size:18px;"></i>Save</a>
     </nav>
 
     <script>
         const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-        let _supabase;
-
-        window.onload = () => {
-            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        };
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function extractVideo() {
-            const urlInput = document.getElementById('tweetUrl').value.trim();
-            const btn = document.getElementById('extractBtn');
-            const resArea = document.getElementById('results');
-
+            const urlInput = $('#tweetUrl').val().trim();
             if (!urlInput) { alert("URLを入力してください"); return; }
 
-            btn.disabled = true;
-            btn.innerText = "Extracting...";
-            resArea.innerHTML = '<p style="margin-top:20px;">Analyzing with yt-dlp...</p>';
+            $('#extractBtn').prop('disabled', true).text("Extracting...");
+            $('#results').html('<p style="margin-top:20px;">Analyzing with yt-dlp...</p>');
 
             try {
                 const response = await fetch("/api", {
@@ -56,49 +44,39 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ url: urlInput })
                 });
-
                 const data = await response.json();
 
                 if (data.status === "success") {
-                    resArea.innerHTML = `
+                    $('#results').html(`
                         <div class="preview-box">
                             <p style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:10px;">Success!</p>
                             <video src="${data.url}" controls class="preview-video" poster="${data.thumbnail}"></video>
                             <button class="download-btn" onclick="downloadAndReg('${data.url}', '${urlInput}', '${data.thumbnail}', '${data.title}')">
                                 <i class="fas fa-download"></i> Download & Auto-Register
                             </button>
-                            <p style="font-size:0.7rem; color:#888; margin-top:10px;">※ランキングに自動追加されます</p>
                         </div>
-                    `;
+                    `);
                 } else {
-                    resArea.innerHTML = `<p style="color:red; margin-top:20px;">Error: ${data.message}</p>`;
+                    $('#results').html(`<p style="color:red; margin-top:20px;">Error: ${data.message}</p>`);
                 }
             } catch (e) {
-                resArea.innerHTML = '<p style="color:red; margin-top:20px;">Connection Error.</p>';
+                $('#results').html('<p style="color:red; margin-top:20px;">Connection Error.</p>');
             } finally {
-                btn.disabled = false;
-                btn.innerText = "Extract Video";
+                $('#extractBtn').prop('disabled', false).html('<i class="fas fa-file-download"></i> Extract Video');
             }
         }
 
         async function downloadAndReg(vUrl, tUrl, thumb, title) {
-            // 動画を別タブで開く
             const a = document.createElement('a');
             a.href = vUrl;
             a.rel = "noreferrer";
             a.target = "_blank";
             a.click();
 
-            // Supabaseへ登録（RPC関数呼び出し）
-            if (_supabase) {
-                await _supabase.rpc('increment_save_count', {
-                    target_tweet_url: tUrl,
-                    target_video_url: vUrl,
-                    target_thumbnail_url: thumb,
-                    target_title: title
-                });
-                alert("Saved & Registered to Ranking!");
-            }
+            await _supabase.rpc('increment_save_count', {
+                target_tweet_url: tUrl, target_video_url: vUrl, target_thumbnail_url: thumb, target_title: title
+            });
+            alert("Registered to Ranking!");
         }
     </script>
 </body>
