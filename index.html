@@ -4,54 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <title>Twitter Video Tools</title>
+    <title>Ranking - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
-    <!-- アイコンとライブラリ -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* タイルが重ならないようにするためのMasonry風設定 */
-        .video-grid {
-            column-count: 2; /* 2列にする */
-            column-gap: 10px;
-            padding: 10px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .listn {
-            break-inside: avoid; /* タイルが途中で切れないようにする */
-            margin-bottom: 10px;
-            position: relative;
-            background: #fff;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-    </style>
 </head>
 <body>
-
-    <header class="site-header">
-        <a href="index.html">Twitter Video Tools</a>
-    </header>
+    <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
     <div class="sort-options">
-        <a id="btn-1d" class="sort-btn btn-1d" href="javascript:void(0)" onclick="loadRanking('1d')">
-            <i class="fas fa-clock"></i> 24h
-        </a>
-        <a id="btn-3d" class="sort-btn btn-3d" href="javascript:void(0)" onclick="loadRanking('3d')">
-            <i class="fas fa-calendar-day"></i> 3d
-        </a>
-        <a id="btn-all" class="sort-btn btn-all active" href="javascript:void(0)" onclick="loadRanking('all')">
-            <i class="fas fa-calendar-week"></i> All
-        </a>
+        <a id="btn-1d" class="sort-btn btn-1d" href="javascript:void(0)" onclick="loadRanking('1d')"><i class="fas fa-clock"></i> 24h</a>
+        <a id="btn-3d" class="sort-btn btn-3d" href="javascript:void(0)" onclick="loadRanking('3d')"><i class="fas fa-calendar-day"></i> 3d</a>
+        <a id="btn-all" class="sort-btn btn-all active" href="javascript:void(0)" onclick="loadRanking('all')"><i class="fas fa-calendar-week"></i> All</a>
     </div>
 
-    <div id="videoGrid" class="video-grid">
-        <!-- JavaScriptで動画がここに並びます -->
-    </div>
+    <div id="videoGrid" class="video-grid"></div>
 
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item active"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
@@ -60,58 +27,39 @@
     </nav>
 
     <script>
-        // --- 1. Supabase設定 (ここを自分のものに書き換えてください) ---
         const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-
         let _supabase;
 
-        // ページ読み込み時に初期化
         window.onload = async () => {
             _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             await loadRanking('all');
         };
 
-        // --- 2. ランキング取得関数 ---
         async function loadRanking(period) {
             if (!_supabase) return;
-
-            // ボタンの見た目切り替え
             document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById('btn-' + period);
             if (activeBtn) activeBtn.classList.add('active');
 
             const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '<p style="text-align:center; padding:20px; column-span:all;">Loading...</p>';
+            grid.innerHTML = '<p style="column-span:all; text-align:center;">Loading...</p>';
 
             try {
                 let query = _supabase.from('videos').select('*').order('save_count', { ascending: false });
+                if (period === '1d') query = query.gte('created_at', new Date(Date.now() - 86400000).toISOString());
+                else if (period === '3d') query = query.gte('created_at', new Date(Date.now() - 259200000).toISOString());
 
-                if (period === '1d') {
-                    const yesterday = new Date(Date.now() - 86400000).toISOString();
-                    query = query.gte('created_at', yesterday);
-                } else if (period === '3d') {
-                    const threeDaysAgo = new Date(Date.now() - 259200000).toISOString();
-                    query = query.gte('created_at', threeDaysAgo);
-                }
+                const { data, error } = await query.limit(50);
+                if (error || !data || data.length === 0) { grid.innerHTML = '<p style="column-span:all; text-align:center;">No data.</p>'; return; }
 
-                const { data, error } = await query.limit(40);
-
-                if (error || !data || data.length === 0) {
-                    grid.innerHTML = '<p style="text-align:center; column-span:all;">No data found.</p>';
-                    return;
-                }
-
-                // 提供されたHTMLの構造に合わせて書き出し
                 grid.innerHTML = data.map(v => `
                     <div class="listn" id="card-${v.id}">
                         <a href="${v.video_url}" target="_blank" rel="noreferrer">
                             <img src="${v.thumbnail_url}" alt="${v.title}" loading="lazy">
                         </a>
                         <div class="user">
-                            <a href="${v.tweet_url}" target="_blank">
-                                <div><span>@${v.title ? v.title.substring(0, 15) : 'Unknown'}</span></div>
-                            </a>
+                            <a href="${v.tweet_url}" target="_blank"><span>@${v.title ? v.title.substring(0, 15) : 'Unknown'}</span></a>
                         </div>
                         <div class="vote">
                             <a href="javascript:void(0)" class="up" onclick="handleVote(${v.id}, 'good', this)">
@@ -123,32 +71,16 @@
                         </div>
                     </div>
                 `).join('');
-
-            } catch (e) {
-                console.error(e);
-                grid.innerHTML = '<p style="text-align:center; column-span:all;">Load Error.</p>';
-            }
+            } catch (e) { grid.innerHTML = '<p style="column-span:all; text-align:center;">Error.</p>'; }
         }
 
-        // --- 3. 投票関数 ---
         async function handleVote(id, type, element) {
             if (!_supabase) return;
             const column = type === 'good' ? 'good_count' : 'bad_count';
-            
-            const { error } = await _supabase.rpc('increment_vote', { 
-                row_id: id, 
-                col_name: column 
-            });
-
+            const { error } = await _supabase.rpc('increment_vote', { row_id: id, col_name: column });
             if (!error) {
-                // 投票成功したらアイコンを薄くして無効化
-                const icon = element.querySelector('i');
-                if (icon) icon.classList.add('voted-icon');
+                element.querySelector('i').classList.add('voted-icon');
                 element.style.pointerEvents = 'none';
-                
-                // 反対のボタンも無効化
-                const sibling = type === 'good' ? element.nextElementSibling : element.previousElementSibling;
-                if (sibling) sibling.style.pointerEvents = 'none';
             }
         }
     </script>
