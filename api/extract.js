@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // CORS設定
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
@@ -10,31 +9,26 @@ export default async function handler(req, res) {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "URL is required" });
 
-    // Vercelの環境変数からAPIキーを読み込む
+    // URLからツイートID（数字）を抜き出す
+    // 例: https://x.com/user/status/1841380... -> 1841380...
+    const tweetId = url.split("/status/")[1]?.split("?")[0];
+    if (!tweetId) return res.status(400).json({ error: "URLからツイートIDを取得できませんでした" });
+
     const apiKey = process.env.RAPIDAPI_KEY;
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Vercelの設定に RAPIDAPI_KEY が登録されていません。" });
-    }
-
-    // RapidAPI の Twitter抽出APIにリクエスト
-    const response = await fetch("https://twitter-video-downloader-api.p.rapidapi.com/index", {
-      method: "POST",
+    // Twttr API (twitter241) のエンドポイントを叩く
+    const response = await fetch(`https://twitter241.p.rapidapi.com/tweet?id=${tweetId}`, {
+      method: "GET",
       headers: {
         "x-rapidapi-key": apiKey,
-        "x-rapidapi-host": "twitter-video-downloader-api.p.rapidapi.com",
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({ url: url })
+        "x-rapidapi-host": "twitter241.p.rapidapi.com"
+      }
     });
 
     const data = await response.json();
-    
-    // APIからの結果をそのまま返す
     return res.status(200).json(data);
 
   } catch (error) {
-    console.error("API Error:", error);
-    return res.status(500).json({ error: "抽出に失敗しました: " + error.message });
+    return res.status(500).json({ error: error.message });
   }
 }
