@@ -7,93 +7,59 @@
     <title>Search - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-    <header class="site-header">
-        <a href="index.html">Twitter Video Tools</a>
-    </header>
+    <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
     <main class="input-container">
-        <input type="text" id="searchQuery" class="text-input" placeholder="キーワード（猫、アニメなど）を入力..." onkeypress="if(event.key==='Enter')executeSearch()">
-        <button class="primary-btn" onclick="executeSearch()">
-            <i class="fas fa-search"></i> Search
-        </button>
+        <input type="text" id="searchQuery" class="text-input" placeholder="Search keywords..." onkeypress="if(event.key==='Enter')executeSearch()">
+        <button class="primary-btn" onclick="executeSearch()"><i class="fas fa-search"></i> Search</button>
     </main>
 
-    <div id="videoGrid" class="video-grid">
-        <!-- 検索結果がここに表示されます -->
-    </div>
+    <div id="videoGrid" class="video-grid"></div>
 
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
-        <a href="search.html" class="nav-item active"><i class="fas fa-search nav-icon"></i>Search</a>
-        <a href="save.html" class="nav-item"><i class="fas fa-plus-circle nav-icon"></i>Save</a>
+        <a href="index.html" class="nav-item"><i class="fas fa-trophy" style="font-size:18px;"></i>Ranking</a>
+        <a href="search.html" class="nav-item active"><i class="fas fa-search" style="font-size:18px;"></i>Search</a>
+        <a href="save.html" class="nav-item"><i class="fas fa-plus-circle" style="font-size:18px;"></i>Save</a>
     </nav>
 
     <script>
         const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-        let _supabase;
-
-        window.onload = () => {
-            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        };
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function executeSearch() {
-            if (!_supabase) return;
-            const query = document.getElementById('searchQuery').value.trim();
-            const grid = document.getElementById('videoGrid');
+            const query = $('#searchQuery').val();
+            if(!query) return;
+            $('#videoGrid').html('<p style="column-span:all; text-align:center; padding:20px;">Searching...</p>');
 
-            if (!query) { alert("キーワードを入力してください"); return; }
-
-            grid.innerHTML = '<p style="column-span:all; text-align:center; padding:20px;">Searching...</p>';
-
-            try {
-                const { data, error } = await _supabase
-                    .from('videos')
-                    .select('*')
-                    .ilike('title', `%${query}%`)
-                    .order('save_count', { ascending: false });
-
-                if (error || !data || data.length === 0) {
-                    grid.innerHTML = '<p style="column-span:all; text-align:center; padding:20px;">No results found.</p>';
-                    return;
-                }
-
-                grid.innerHTML = data.map(v => `
-                    <div class="listn">
-                        <a href="${v.video_url}" target="_blank" rel="noreferrer">
-                            <img src="${v.thumbnail_url}" loading="lazy">
-                        </a>
-                        <div class="user">
-                            <a href="${v.tweet_url}" target="_blank">
-                                <div><span>@${v.title ? v.title.substring(0, 15) : 'Unknown'}</span></div>
-                            </a>
-                        </div>
-                        <div class="vote">
-                            <a href="javascript:void(0)" class="up" onclick="handleVote(${v.id}, 'good', this)">
-                                <div><span><i class="fas fa-thumbs-up"></i> ${v.save_count}</span></div>
-                            </a>
-                            <a href="javascript:void(0)" class="down" onclick="handleVote(${v.id}, 'bad', this)">
-                                <div><span><i class="fas fa-thumbs-down"></i></span></div>
-                            </a>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                grid.innerHTML = '<p style="column-span:all; text-align:center;">Search error.</p>';
+            const { data } = await _supabase.from('videos').select('*').ilike('title', `%${query}%`).order('save_count', { ascending: false });
+            
+            if(!data || data.length === 0) {
+                $('#videoGrid').html('<p style="column-span:all; text-align:center; padding:20px;">No results found.</p>');
+                return;
             }
+
+            const gridHtml = data.map(v => `
+                <div class="listn">
+                    <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
+                    <div class="tile-controls">
+                        <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
+                        <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
+                        <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            $('#videoGrid').html(gridHtml);
         }
 
-        async function handleVote(id, type, element) {
-            const column = type === 'good' ? 'good_count' : 'bad_count';
-            const { error } = await _supabase.rpc('increment_vote', { row_id: id, col_name: column });
-            if (!error) {
-                element.querySelector('i').classList.add('voted-icon');
-                element.style.pointerEvents = 'none';
-            }
+        async function vote(id, type) {
+            const col = type === 'good' ? 'good_count' : 'bad_count';
+            await _supabase.rpc('increment_vote', { row_id: id, col_name: col });
+            alert("Voted!");
         }
     </script>
 </body>
