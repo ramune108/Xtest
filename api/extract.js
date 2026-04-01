@@ -7,21 +7,21 @@ export default async function handler(req, res) {
 
   try {
     const { url } = req.body;
-    if (!url) return res.status(400).json({ error: "URL is required" });
-
-    // URLからツイートID（数字）を抜き出す
-    // 例: https://x.com/user/status/1841380... -> 1841380...
-    const tweetId = url.split("/status/")[1]?.split("?")[0];
-    if (!tweetId) return res.status(400).json({ error: "URLからツイートIDを取得できませんでした" });
-
     const apiKey = process.env.RAPIDAPI_KEY;
 
-    // Twttr API (twitter241) のエンドポイントを叩く
+    // デバッグ用ログ（VercelのLogsで確認可能。キーの最初の3文字だけ表示）
+    console.log("使用中のキー(頭3文字):", apiKey ? apiKey.substring(0, 3) : "未設定");
+
+    // URLからIDを抽出
+    const tweetId = url.split("/status/")[1]?.split("?")[0];
+    if (!tweetId) return res.status(400).json({ error: "URL形式が正しくありません" });
+
+    // Twttr API (twitter241) の公式設定に100%合わせる
     const response = await fetch(`https://twitter241.p.rapidapi.com/tweet?id=${tweetId}`, {
       method: "GET",
       headers: {
         "x-rapidapi-key": apiKey,
-        "x-rapidapi-host": "twitter241.p.rapidapi.com"
+        "x-rapidapi-host": "twitter241.p.rapidapi.com" // ここが1文字でも違うとはねられます
       }
     });
 
