@@ -112,55 +112,28 @@
                 });
 
                 const data = await response.json();
-                console.log("API受信データ:", data);
+    console.log("API受信データ:", data);
 
-                // All Media Downloader のデータ構造に合わせてURLを取得
-                // 階層: data.data.main.video または data.data.video[0].url
-                let videoUrl = "";
-                if (data.status && data.data) {
-                    videoUrl = data.data.main?.video || (data.data.video && data.data.video[0]?.url);
-                }
-
-                if (videoUrl) {
-                    showPreview(videoUrl, urlInput);
-                } else {
-                    // エラーメッセージの表示
-                    const errorMsg = data.message || "動画が見つかりませんでした。URLが正しいか確認してください。";
-                    resultsContainer.innerHTML = `
-                        <div style="color:red; font-size:0.9rem; margin-top:15px; padding:10px; background:#fff0f0; border-radius:8px;">
-                            ${errorMsg}
-                        </div>
-                    `;
-                }
-
-            } catch (error) {
-                console.error("Error:", error);
-                resultsContainer.innerHTML = '<p style="color:red; margin-top:15px;">通信エラーが発生しました。</p>';
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "動画を抽出する";
-            }
+    // /all エンドポイントのレスポンス形式に合わせて取得
+    // 一般的に data.data.main.video または data.data.video[0].url に入ります
+    let videoUrl = "";
+    if (data.status && data.data) {
+        // 優先度1: main.video
+        videoUrl = data.data.main?.video;
+        // 優先度2: video配列の最初の要素
+        if (!videoUrl && data.data.video && data.data.video.length > 0) {
+            videoUrl = data.data.video[0].url;
         }
+    }
 
-        function showPreview(videoUrl, originalUrl) {
-            const resultsContainer = document.getElementById('results');
-            
-            resultsContainer.innerHTML = `
-                <div class="preview-container">
-                    <p style="font-weight: bold; margin-bottom: 12px; font-size: 0.9rem; color:#28a745;">動画が見つかりました！</p>
-                    <video src="${videoUrl}" controls class="preview-video"></video>
-                    <button class="save-confirm-btn" onclick="saveToDatabase('${videoUrl}', '${originalUrl}')">
-                        この動画をランキングに登録
-                    </button>
-                </div>
-            `;
-        }
-
-        // --- ステップ3：データベース保存（Supabase）で実装する部分 ---
-        function saveToDatabase(videoUrl, tweetUrl) {
-            alert("抽出に成功しました！\n次は『ステップ3：Supabaseに保存』を実装しましょう。\nこれで本当のランキングサイトになります。");
-            console.log("保存準備:", { videoUrl, tweetUrl });
-        }
+    if (videoUrl) {
+        showPreview(videoUrl, urlInput);
+    } else {
+        // エラー理由を表示
+        const msg = data.message || "動画URLが見つかりませんでした。";
+        resultsContainer.innerHTML = `<div style="color:red;">${msg}</div>`;
+    }
+}
     </script>
 </body>
 </html>
