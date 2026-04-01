@@ -5,149 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>動画を保存 - 保存ランキング</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Supabase ライブラリの読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 保存ページ専用の追加スタイル */
-        .preview-container {
-            margin-top: 20px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .preview-video {
-            width: 100%;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            background: #000;
-            display: block;
-        }
-        .save-confirm-btn {
-            background: #28a745;
-            color: #fff;
-            border: none;
-            padding: 15px 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            width: 100%;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-        .save-confirm-btn:active { background: #218838; }
-
-        /* 読み込み中スピナー */
-        .loading-spinner {
-            margin: 30px auto;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1da1f2;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
+        .preview-container { margin-top: 20px; padding: 20px; background: #fff; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .preview-video { width: 100%; border-radius: 10px; margin-bottom: 15px; background: #000; }
+        .save-confirm-btn { background: #28a745; color: #fff; border: none; padding: 15px 20px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 1rem; cursor: pointer; }
+        .loading-spinner { margin: 30px auto; border: 4px solid #f3f3f3; border-top: 4px solid #1da1f2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <!-- ヘッダー -->
-    <header class="header">
-        <a href="index.html" class="logo">保存ランキング</a>
-    </header>
+    <header class="header"><a href="index.html" class="logo">保存ランキング</a></header>
 
-    <!-- メイン入力エリア -->
     <main class="input-container">
-        <p style="font-size: 0.9rem; margin-bottom: 15px; color: #555; line-height: 1.6;">
-            X(Twitter)の動画URLを貼り付けてください。<br>
-            抽出に成功すると、ランキングへ登録できます。
-        </p>
-        
-        <!-- URL入力欄 (id="tweetUrl" が重要) -->
-        <input type="text" id="tweetUrl" class="text-input" placeholder="https://x.com/user/status/12345...">
-        
-        <!-- 抽出ボタン (id="extractBtn" と onclick が重要) -->
+        <p style="font-size: 0.9rem; margin-bottom: 15px; color: #555;">URLを貼り付けてダウンロードすると、自動的にランキングに登録されます。</p>
+        <input type="text" id="tweetUrl" class="text-input" placeholder="https://x.com/...">
         <button id="extractBtn" class="primary-btn" onclick="extractVideo()">動画を抽出する</button>
-
-        <!-- 結果表示エリア (id="results") -->
         <div id="results"></div>
     </main>
 
-    <!-- 下部ナビゲーション -->
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item">
-            <span class="nav-icon">🏆</span>
-            <span class="label">ランキング</span>
-        </a>
-        <a href="search.html" class="nav-item">
-            <span class="nav-icon">🔍</span>
-            <span class="label">検索</span>
-        </a>
-        <a href="save.html" class="nav-item active">
-            <span class="nav-icon">➕</span>
-            <span class="label">保存</span>
-        </a>
+        <a href="index.html" class="nav-item"><span class="nav-icon">🏆</span>ランキング</a>
+        <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span>検索</a>
+        <a href="save.html" class="nav-item active"><span class="nav-icon">➕</span>保存</a>
     </nav>
 
     <script>
-    async function extractVideo() {
-        const urlInput = document.getElementById('tweetUrl').value;
-        const btn = document.getElementById('extractBtn');
-        const resultsContainer = document.getElementById('results');
+        // --- 1. Supabaseの初期設定 ---
+        const SUPABASE_URL = 'あなたのProject URL'; // ここを書き換え
+        const SUPABASE_KEY = 'あなたのanon public API Key'; // ここを書き換え
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        if (!urlInput) {
-            alert("URLを入力してください");
-            return;
+        async function extractVideo() {
+            const urlInput = document.getElementById('tweetUrl').value;
+            const btn = document.getElementById('extractBtn');
+            const resultsContainer = document.getElementById('results');
+
+            if (!urlInput) { alert("URLを入力してください"); return; }
+            btn.disabled = true; btn.innerText = "解析中...";
+            resultsContainer.innerHTML = '<div class="loading-spinner"></div>';
+
+            try {
+                const response = await fetch("/api", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: urlInput })
+                });
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    resultsContainer.innerHTML = `
+                        <div class="preview-container">
+                            <video src="${data.url}" controls class="preview-video" poster="${data.thumbnail}"></video>
+                            <button class="save-confirm-btn" onclick="downloadAndRegister('${data.url}', '${urlInput}', '${data.thumbnail}', '${data.title}')">
+                                📥 ダウンロードして保存
+                            </button>
+                            <p style="font-size:0.7rem; color:#888; margin-top:10px;">※ダウンロードするとランキングに反映されます</p>
+                        </div>
+                    `;
+                } else {
+                    resultsContainer.innerHTML = `<p style="color:red;">エラー: ${data.message}</p>`;
+                }
+            } catch (error) {
+                resultsContainer.innerHTML = '<p style="color:red;">通信エラーが発生しました。</p>';
+            } finally {
+                btn.disabled = false; btn.innerText = "動画を抽出する";
+            }
         }
 
-        // UIを読み込み中状態にする
-        btn.disabled = true;
-        btn.innerText = "解析中...";
-        resultsContainer.innerHTML = '<div class="loading-spinner"></div>';
+        // --- 2. ダウンロードと同時にランキング登録する魔法の関数 ---
+        async function downloadAndRegister(videoUrl, tweetUrl, thumbUrl, title) {
+            // A. 動画を別タブで開く（ユーザーが保存できるようにする）
+            window.open(videoUrl, '_blank');
 
-        try {
-            // Vercel上のPython API (/api) へリクエストを送信
-            const response = await fetch("/api", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: urlInput })
+            // B. Supabaseの関数（ステップ1で作ったやつ）を呼び出す
+            const { error } = await _supabase.rpc('increment_save_count', {
+                target_tweet_url: tweetUrl,
+                target_video_url: videoUrl,
+                target_thumbnail_url: thumbUrl,
+                target_title: title
             });
 
-            const data = await response.json();
-
-            if (data.status === "success") {
-                // 成功：動画プレイヤーと登録ボタンを表示
-                resultsContainer.innerHTML = `
-                    <div class="preview-container">
-                        <p style="font-size:0.9rem; font-weight:bold; margin-bottom:10px; color:#1da1f2;">動画が見つかりました！</p>
-                        <video src="${data.url}" controls class="preview-video" poster="${data.thumbnail}"></video>
-                        <button class="save-confirm-btn" onclick="saveToDatabase('${data.url}', '${urlInput}', '${data.thumbnail}')">
-                            この動画をランキングに登録
-                        </button>
-                    </div>
-                `;
+            if (error) {
+                console.error("ランキング登録エラー:", error);
             } else {
-                // エラーメッセージの表示
-                resultsContainer.innerHTML = `
-                    <div style="color:red; font-size:0.9rem; margin-top:15px; padding:10px; background:#fff0f0; border-radius:8px;">
-                        エラー: ${data.message}
-                    </div>
-                `;
+                alert("保存を開始しました。ランキングにも反映されました！");
             }
-        } catch (error) {
-            // 通信失敗時の処理
-            console.error("Error:", error);
-            resultsContainer.innerHTML = '<p style="color:red; margin-top:15px;">サーバー通信エラーが発生しました。</p>';
-        } finally {
-            // 成功しても失敗してもボタンを元に戻す
-            btn.disabled = false;
-            btn.innerText = "動画を抽出する";
         }
-    } // <-- ここで extractVideo 関数が閉じる
-
-    // データベース保存用の関数
-    function saveToDatabase(videoUrl, tweetUrl, thumbUrl) {
-        alert("抽出に成功しました！\n次は『ステップ3：Supabaseに保存』を実装しましょう！");
-        console.log("保存準備:", { videoUrl, tweetUrl, thumbUrl });
-    } // <-- ここで saveToDatabase 関数が閉じる
-</script>
+    </script>
 </body>
 </html>
