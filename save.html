@@ -5,17 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>Save - Twitter Video Tools</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
     <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
     <main class="input-container">
-        <p style="font-weight: bold; color: #555;">Save X Video</p>
-        <input type="text" id="tweetUrl" class="text-input" placeholder="Paste Tweet URL here...">
-        <button id="extractBtn" class="primary-btn" onclick="extractVideo()"><i class="fas fa-file-download"></i> Extract Video</button>
+        <input type="text" id="tweetUrl" class="text-input" placeholder="Paste X URL here...">
+        <button id="extractBtn" class="primary-btn" onclick="extractVideo()"><i class="fas fa-file-download"></i> Extract</button>
         <div id="results"></div>
     </main>
 
@@ -35,11 +34,7 @@
             const resArea = document.getElementById('results');
             resArea.innerHTML = '<p>Processing...</p>';
 
-            const response = await fetch("/api", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url: url })
-            });
+            const response = await fetch("/api", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url }) });
             const data = await response.json();
 
             if (data.status === "success") {
@@ -47,21 +42,17 @@
                     <div class="preview-box">
                         <video src="${data.url}" controls class="preview-video"></video>
                         <button class="download-btn" onclick="downloadAndReg('${data.url}', '${url}', '${data.thumbnail}', '${data.title}')">
-                            <i class="fas fa-download"></i> Download & Register
+                            <i class="fas fa-download"></i> Download & Auto-Register
                         </button>
                     </div>
                 `;
-            } else {
-                resArea.innerHTML = '<p style="color:red;">Error extracting video.</p>';
-            }
+            } else { resArea.innerHTML = '<p style="color:red;">Failed to extract.</p>'; }
         }
 
         async function downloadAndReg(vUrl, tUrl, thumb, title) {
             window.open(vUrl, '_blank');
-            await _supabase.rpc('increment_save_count', {
-                target_tweet_url: tUrl, target_video_url: vUrl, target_thumbnail_url: thumb, target_title: title
-            });
-            alert("Registered to Ranking!");
+            await _supabase.rpc('increment_save_count', { target_tweet_url: tUrl, target_video_url: vUrl, target_thumbnail_url: thumb, target_title: title });
+            alert("Success!");
         }
     </script>
 </body>
