@@ -6,20 +6,18 @@
     <meta name="referrer" content="no-referrer">
     <title>Search - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
     <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
     <main class="input-container">
-        <input type="text" id="searchQuery" class="text-input" placeholder="動画を検索（猫、アニメ、etc...）">
-        <button class="primary-btn" onclick="executeSearch()"><i class="fas fa-search"></i> 検索する</button>
+        <input type="text" id="searchQuery" class="text-input" placeholder="Search keywords...">
+        <button class="primary-btn" onclick="executeSearch()"><i class="fas fa-search"></i> Search</button>
     </main>
 
-    <div id="videoGrid" class="video-grid">
-        <!-- 検索結果 -->
-    </div>
+    <div id="videoGrid" class="video-grid"></div>
 
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
@@ -35,27 +33,18 @@
         async function executeSearch() {
             const query = document.getElementById('searchQuery').value;
             const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '<p style="grid-column:1/3; text-align:center;">Searching...</p>';
+            grid.innerHTML = '<p>Searching...</p>';
 
-            const { data, error } = await _supabase
-                .from('videos').select('*')
-                .ilike('title', `%${query}%`)
-                .order('save_count', { ascending: false });
-
-            if (data.length === 0) {
-                grid.innerHTML = '<p style="grid-column:1/3; text-align:center;">No videos found.</p>';
-                return;
-            }
+            const { data, error } = await _supabase.from('videos').select('*').ilike('title', `%${query}%`).order('save_count', { ascending: false });
+            if (data.length === 0) { grid.innerHTML = '<p>No results found.</p>'; return; }
 
             grid.innerHTML = data.map(v => `
-                <div class="listn">
-                    <a href="${v.video_url}" target="_blank" rel="noreferrer">
-                        <img src="${v.thumbnail_url}" loading="lazy">
-                    </a>
-                    <div class="user"><a href="${v.tweet_url}" target="_blank">@${v.title.substring(0,10)}...</a></div>
-                    <div class="vote-bar">
-                        <div class="save-count">💾 ${v.save_count}</div>
-                        <div>👍 ${v.good_count || 0}</div>
+                <div class="listn" id="${v.id}" style="position: relative;">
+                    <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
+                    <div class="user"><a href="${v.tweet_url}" target="_blank"><span>@${v.title ? v.title.substring(0, 10) : ''}</span></a></div>
+                    <div class="vote">
+                        <a href="javascript:void(0)" class="up"><div><span><i class="fas fa-thumbs-up"></i> ${v.save_count}</span></div></a>
+                        <a href="javascript:void(0)" class="down"><div><span><i class="fas fa-thumbs-down"></i></span></div></a>
                     </div>
                 </div>
             `).join('');
