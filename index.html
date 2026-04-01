@@ -49,15 +49,21 @@
             if (error || !data || data.length === 0) {
                 grid.innerHTML = '<p>No data found.</p>'; return;
             }
-
+            
             grid.innerHTML = data.map(v => `
-                <div class="listn" id="${v.id}" style="position: relative;">
+                <div class="listn" id="${v.id}">
+                    <!-- 動画の形をそのまま見せるため、画像タグを配置 -->
                     <a href="${v.video_url}" target="_blank" rel="noreferrer">
-                        <img src="${v.thumbnail_url}" alt="${v.title}">
+                        <img src="${v.thumbnail_url}" alt="${v.title}" loading="lazy">
                     </a>
+                    
+                    <!-- 下に重ならず、自然に積み重なる配置 -->
                     <div class="user">
-                        <a href="${v.tweet_url}" target="_blank"><span>@${v.title ? v.title.substring(0, 15) : 'Unknown'}</span></a>
+                        <a href="${v.tweet_url}" target="_blank">
+                            <div><span>@${v.title ? v.title.substring(0, 12) : 'Unknown'}</span></div>
+                        </a>
                     </div>
+            
                     <div class="vote">
                         <a href="javascript:void(0)" class="up" onclick="handleVote(${v.id}, 'good', this)">
                             <div><span><i class="fas fa-thumbs-up"></i> ${v.save_count}</span></div>
@@ -68,7 +74,6 @@
                     </div>
                 </div>
             `).join('');
-        }
 
         async function handleVote(id, type, element) {
             const column = type === 'good' ? 'good_count' : 'bad_count';
