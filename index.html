@@ -1,95 +1,171 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保存ランキング - 人気の動画一覧</title>
-    <link rel="stylesheet" href="style.css">
-    <meta name="referrer" content="no-referrer"> <!-- ここでもリファラを隠すのが大事 -->
+    <meta name="referrer" content="no-referrer">
+    <title>Twitter Video Tools - 保存ランキング</title>
+    <!-- FontAwesomeの読み込み（ボタン用） -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <!-- Supabaseの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* --- 提供コードのデザインを完全再現 --- */
+        body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 80px; }
+        
+        /* ヘッダー */
+        .site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 40px; text-align: center; line-height: 40px; position: sticky; top: 0; z-index: 1000; }
+        .site-header a { text-decoration: none; color: #FFF; font-weight: bold; }
+
+        /* 期間選択ボタン */
+        .sort-options {
+            margin: 20px auto; width: 100%; max-width: 470px; padding: 0 10px; 
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px;
+        }
+        .sort-btn {
+            padding: 8px 6px; color: #fff; border-radius: 4px; text-decoration: none; 
+            font-weight: bold; text-align: center; font-size: 13px; opacity: 0.6;
+        }
+        .sort-btn.active { opacity: 1; }
+        .btn-24h { background-color: rgba(40, 167, 69, 1); }
+        .btn-3d { background-color: rgba(0, 123, 255, 1); }
+        .btn-7d { background-color: rgba(255, 193, 7, 1); }
+
+        /* 動画グリッド（2列タイル） */
+        .video-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px;
+            max-width: 1000px; margin: 0 auto;
+        }
+
+        /* 個別のタイル（.listn スタイル） */
+        .listn {
+            position: relative; background: #fff; border-radius: 8px; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+        }
+        .listn img {
+            width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #000;
+        }
+
+        /* ユーザー名表示 */
+        .user {
+            padding: 5px 8px; font-size: 11px; background: rgba(255,255,255,0.9);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .user a { color: #555; text-decoration: none; }
+
+        /* 投票・統計エリア */
+        .vote-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 8px; border-top: 1px solid #eee; background: #fff;
+        }
+        .save-count { font-size: 11px; color: #888; font-weight: bold; }
+        .vote-buttons { display: flex; gap: 10px; }
+        .vote-link { color: #ccc; text-decoration: none; font-size: 16px; transition: color 0.2s; }
+        .vote-link.up:hover { color: #28a745; }
+        .vote-link.down:hover { color: #dc3545; }
+        .voted { opacity: 0.4; pointer-events: none; } /* 投票後に薄くする */
+
+        /* 下部ナビゲーション */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 2000; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 11px; }
+        .nav-item.active { color: #00acee; }
+        .nav-icon { font-size: 20px; }
+    </style>
 </head>
 <body>
-    <header class="header">
-        <a href="index.html" class="logo">保存ランキング</a>
+
+    <header class="site-header">
+        <a href="index.html">Twitter Video Tools</a>
     </header>
 
-    <!-- 期間選択タブ -->
-    <div class="tabs">
-        <button class="tab" id="tab-1d" onclick="loadRanking('1d')">1日</button>
-        <button class="tab" id="tab-3d" onclick="loadRanking('3d')">3日</button>
-        <button class="tab active" id="tab-all" onclick="loadRanking('all')">全期間</button>
+    <!-- ソートオプション -->
+    <div class="sort-options">
+        <a id="btn-1d" class="sort-btn btn-24h" href="javascript:loadRanking('1d')"><i class="fas fa-clock"></i> 24h</a>
+        <a id="btn-3d" class="sort-btn btn-3d" href="javascript:loadRanking('3d')"><i class="fas fa-calendar-day"></i> 3d</a>
+        <a id="btn-all" class="sort-btn btn-7d active" href="javascript:loadRanking('all')"><i class="fas fa-calendar-week"></i> All</a>
     </div>
 
-    <!-- ランキング表示エリア（2列タイル） -->
+    <!-- メイングリッド -->
     <div id="videoGrid" class="video-grid">
-        <!-- ここにJavaScriptで動画が並びます -->
+        <!-- JSでタイルが生成されます -->
     </div>
 
-    <!-- 下部ナビゲーション -->
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item active"><span class="nav-icon">🏆</span>ランキング</a>
-        <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span>検索</a>
-        <a href="save.html" class="nav-item"><span class="nav-icon">➕</span>保存</a>
+        <a href="index.html" class="nav-item active"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
+        <a href="search.html" class="nav-item"><i class="fas fa-search nav-icon"></i>Search</a>
+        <a href="save.html" class="nav-item"><i class="fas fa-plus-circle nav-icon"></i>Save</a>
     </nav>
 
     <script>
-        // --- 1. Supabaseの初期設定 ---
-        const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
+        const SUPABASE_URL = 'あなたのProject URL'; 
+        const SUPABASE_KEY = 'あなたのanon public API Key';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ページ読み込み時に実行
         window.onload = () => loadRanking('all');
 
-        // --- 2. ランキングデータを取得して表示する関数 ---
         async function loadRanking(period) {
-            // タブの見た目を切り替え
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + period).classList.add('active');
+            // UI切り替え
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + period).classList.add('active');
 
             const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '<p style="text-align:center; grid-column: 1/3; padding:20px;">読み込み中...</p>';
+            grid.innerHTML = '<p style="grid-column:1/3; text-align:center;">Loading...</p>';
 
             let query = _supabase.from('videos').select('*').order('save_count', { ascending: false });
 
-            // 期間による絞り込み（簡易版）
-            const now = new Date();
             if (period === '1d') {
-                const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000)).toISOString();
+                const yesterday = new Date(Date.now() - 86400000).toISOString();
                 query = query.gte('created_at', yesterday);
             } else if (period === '3d') {
-                const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000)).toISOString();
+                const threeDaysAgo = new Date(Date.now() - 259200000).toISOString();
                 query = query.gte('created_at', threeDaysAgo);
             }
 
-            const { data, error } = await query.limit(20); // 上位20件
+            const { data, error } = await query.limit(40);
 
-            if (error || !data) {
-                grid.innerHTML = '<p style="text-align:center; grid-column: 1/3;">データがありません</p>';
+            if (error || !data || data.length === 0) {
+                grid.innerHTML = '<p style="grid-column:1/3; text-align:center;">No Data</p>';
                 return;
             }
 
-            // HTMLを組み立てる
-            grid.innerHTML = data.map(video => `
-                <div class="video-card">
-                    <!-- サムネイル -->
-                    <img src="${video.thumbnail_url}" class="thumb" loading="lazy">
-                    
-                    <!-- 全面：動画への直リンク -->
-                    <a href="${video.video_url}" target="_blank" class="main-link" rel="noreferrer"></a>
-
-                    <!-- 右上：元ツイートへのリンク -->
-                    <a href="${video.tweet_url}" target="_blank" class="x-link">
-                        <svg viewBox="0 0 24 24" class="x-icon"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+            grid.innerHTML = data.map(v => `
+                <div class="listn" id="card-${v.id}">
+                    <a href="${v.video_url}" target="_blank" rel="noreferrer">
+                        <img src="${v.thumbnail_url}" alt="${v.title}" loading="lazy">
                     </a>
-
-                    <!-- 下部：保存数（評価バー） -->
-                    <div class="rating-bar">
-                        <span class="vote-btn">💾 ${video.save_count} 保存</span>
-                        <span class="vote-btn">👍 Good</span>
+                    <div class="user">
+                        <a href="${v.tweet_url}" target="_blank"><span>@${v.title.substring(0, 15)}...</span></a>
+                    </div>
+                    <div class="vote-bar">
+                        <div class="save-count">💾 ${v.save_count}</div>
+                        <div class="vote-buttons">
+                            <a href="javascript:void(0)" class="vote-link up" onclick="handleVote(${v.id}, 'good', this)">
+                                <i class="fas fa-thumbs-up"></i>
+                            </a>
+                            <a href="javascript:void(0)" class="vote-link down" onclick="handleVote(${v.id}, 'bad', this)">
+                                <i class="fas fa-thumbs-down"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function handleVote(id, type, element) {
+            const column = type === 'good' ? 'good_count' : 'bad_count';
+            
+            // Supabaseでカウントアップ
+            const { error } = await _supabase.rpc('increment_vote', { 
+                row_id: id, 
+                col_name: column 
+            });
+
+            if (!error) {
+                element.classList.add('voted');
+                // 反対側のボタンも無効化
+                const parent = element.parentElement;
+                parent.querySelectorAll('.vote-link').forEach(el => el.classList.add('voted'));
+            }
         }
     </script>
 </body>
