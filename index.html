@@ -10,9 +10,10 @@
     <header class="header"><a href="index.html" class="logo">保存ランキング</a></header>
     
     <div class="tabs">
-        <button class="tab active">24時間</button>
-        <button class="tab">3日間</button>
-        <button class="tab">1週間</button>
+    <!-- 各ボタンに ID をつけて、クリック時に URL を変えるようにする -->
+    <button class="tab" id="tab-1d" onclick="setPeriod('1d')">1日</button>
+    <button class="tab" id="tab-3d" onclick="setPeriod('3d')">3日</button>
+    <button class="tab" id="tab-7d" onclick="setPeriod('7d')">1週間</button>
     </div>
 
     <div class="video-grid">
