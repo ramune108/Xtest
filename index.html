@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保存ランキング</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header"><a href="index.html" class="logo">保存ランキング</a></header>
+    
+    <div class="tabs">
+        <button class="tab active">24時間</button>
+        <button class="tab">3日間</button>
+        <button class="tab">1週間</button>
+    </div>
+
+    <div class="video-grid">
+        <!-- ダミーの動画カード（JavaScriptで動的に増やす部分） -->
+        <div class="video-card">
+            <img src="https://via.placeholder.com/200x350" class="thumb">
+            <a href="#" class="main-link"></a>
+            <a href="#" class="x-link">
+                <svg viewBox="0 0 24 24" class="x-icon"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+            </a>
+            <div class="rating-bar">
+                <button class="vote-btn">👍 120</button>
+                <button class="vote-btn">👎 2</button>
+            </div>
+        </div>
+        <!-- 複数並べるテスト -->
+        <div class="video-card"><img src="https://via.placeholder.com/200x350" class="thumb"><a href="#" class="main-link"></a><div class="rating-bar"><span>👍 85</span><span>👎 0</span></div></div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="index.html" class="nav-item active"><span class="nav-icon">🏆</span>ランキング</a>
+        <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span>検索</a>
+        <a href="save.html" class="nav-item"><span class="nav-icon">➕</span>保存</a>
+    </nav>
+</body>
+</html>
