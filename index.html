@@ -4,84 +4,127 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <title>Ranking - Twitter Video Tools</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Twitter Video Tools</title>
+    <!-- 外部ソースの読み込み -->
+    <link rel="stylesheet" href="https://monsnode.com/common/a.css" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 70px; }
+        .site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 45px; text-align: center; line-height: 25px; }
+        .site-header a { text-decoration: none; color: #FFF; font-weight: bold; }
+
+        /* --- タイル表示のカスタムスタイル --- */
+        .video-grid { display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; }
+        .listn { position: relative; width: calc(50% - 10px); margin: 5px; background: #000; border-radius: 4px; overflow: hidden; }
+        .listn img { width: 100%; height: auto; display: block; }
+        
+        /* タイル下部の Good/User/Bad バー */
+        .tile-overlay { position: absolute; bottom: 5px; left: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 5px; box-sizing: border-box; }
+        .vote-btn-tile { background: rgba(0,0,0,0.5); color: white; border: 1px solid #777; border-radius: 4px; padding: 5px 8px; font-size: 14px; cursor: pointer; }
+        .user-badge { background: #00acee; color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* --- 詳細ページのカスタムスタイル --- */
+        .detail-container { display: flex; padding: 10px; gap: 10px; max-width: 600px; margin: 0 auto; background: #fff; }
+        .detail-left { flex: 1.2; }
+        .detail-right { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .detail-thumb { width: 100%; border-radius: 4px; display: block; }
+        .watch-btn { background: #333; color: white; padding: 10px; text-align: center; border-radius: 4px; text-decoration: none; display: block; margin-top: 5px; font-weight: bold; }
+        
+        .action-btn { background: #333; color: white; text-decoration: none; padding: 12px; border-radius: 4px; text-align: center; font-size: 14px; font-weight: bold; }
+        .btn-red { background: #dc3545; }
+        .tweet-text-box { font-size: 13px; color: #333; line-height: 1.4; margin-bottom: 5px; white-space: pre-wrap; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 1000; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 10px; }
+        .nav-item.active { color: #00acee; }
+    </style>
 </head>
 <body>
+
     <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
-    <div class="sort-options">
-        <a id="btn-1d" class="sort-btn btn-1d" href="javascript:void(0)" onclick="loadRanking('1d')"><i class="fas fa-clock"></i> 24h</a>
-        <a id="btn-3d" class="sort-btn btn-3d" href="javascript:void(0)" onclick="loadRanking('3d')"><i class="fas fa-calendar-day"></i> 3d</a>
-        <a id="btn-all" class="sort-btn btn-all active" href="javascript:void(0)" onclick="loadRanking('all')"><i class="fas fa-calendar-week"></i> All</a>
+    <div id="mainContent">
+        <!-- ここにJavaScriptで「一覧」または「詳細」が表示されます -->
     </div>
 
-    <div id="videoGrid" class="video-grid"></div>
-
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item active"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
-        <a href="search.html" class="nav-item"><i class="fas fa-search nav-icon"></i>Search</a>
-        <a href="save.html" class="nav-item"><i class="fas fa-plus-circle nav-icon"></i>Save</a>
+        <a href="index.html" class="nav-item active"><i class="fas fa-trophy" style="font-size:18px;"></i>Ranking</a>
+        <a href="search.html" class="nav-item"><i class="fas fa-search" style="font-size:18px;"></i>Search</a>
+        <a href="save.html" class="nav-item"><i class="fas fa-plus-circle" style="font-size:18px;"></i>Save</a>
     </nav>
 
     <script>
         const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-        let _supabase;
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        window.onload = async () => {
-            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            await loadRanking('all');
-        };
+        $(document).ready(function() {
+            const params = new URLSearchParams(window.location.search);
+            const videoId = params.get('v');
 
-        async function loadRanking(period) {
-            if (!_supabase) return;
-            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-            const activeBtn = document.getElementById('btn-' + period);
-            if (activeBtn) activeBtn.classList.add('active');
+            if (videoId) {
+                showDetailPage(videoId); // 詳細ページを表示
+            } else {
+                showRankingPage(); // 一覧ページを表示
+            }
+        });
 
-            const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '<p style="column-span:all; text-align:center;">Loading...</p>';
-
-            try {
-                let query = _supabase.from('videos').select('*').order('save_count', { ascending: false });
-                if (period === '1d') query = query.gte('created_at', new Date(Date.now() - 86400000).toISOString());
-                else if (period === '3d') query = query.gte('created_at', new Date(Date.now() - 259200000).toISOString());
-
-                const { data, error } = await query.limit(50);
-                if (error || !data || data.length === 0) { grid.innerHTML = '<p style="column-span:all; text-align:center;">No data.</p>'; return; }
-
-                grid.innerHTML = data.map(v => `
-                    <div class="listn" id="card-${v.id}">
-                        <a href="${v.video_url}" target="_blank" rel="noreferrer">
-                            <img src="${v.thumbnail_url}" alt="${v.title}" loading="lazy">
+        // --- タイル一覧ページの表示 ---
+        async function showRankingPage() {
+            const { data } = await _supabase.from('videos').select('*').order('save_count', { ascending: false }).limit(40);
+            
+            let html = '<div class="video-grid">';
+            data.forEach(v => {
+                // アカウント名の取得（ツイートURLから抽出するか、タイトルの一部を使用）
+                const accountName = v.title ? v.title.substring(0, 12) : "Unknown";
+                
+                html += `
+                    <div class="listn">
+                        <a href="index.html?v=${v.id}">
+                            <img src="${v.thumbnail_url}">
                         </a>
-                        <div class="user">
-                            <a href="${v.tweet_url}" target="_blank"><span>@${v.title ? v.title.substring(0, 15) : 'Unknown'}</span></a>
-                        </div>
-                        <div class="vote">
-                            <a href="javascript:void(0)" class="up" onclick="handleVote(${v.id}, 'good', this)">
-                                <div><span><i class="fas fa-thumbs-up"></i> ${v.save_count}</span></div>
-                            </a>
-                            <a href="javascript:void(0)" class="down" onclick="handleVote(${v.id}, 'bad', this)">
-                                <div><span><i class="fas fa-thumbs-down"></i></span></div>
-                            </a>
+                        <div class="tile-overlay">
+                            <button class="vote-btn-tile" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
+                            <div class="user-badge">${accountName}</div>
+                            <button class="vote-btn-tile" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
                         </div>
                     </div>
-                `).join('');
-            } catch (e) { grid.innerHTML = '<p style="column-span:all; text-align:center;">Error.</p>'; }
+                `;
+            });
+            html += '</div>';
+            $('#mainContent').html(html);
         }
 
-        async function handleVote(id, type, element) {
-            if (!_supabase) return;
-            const column = type === 'good' ? 'good_count' : 'bad_count';
-            const { error } = await _supabase.rpc('increment_vote', { row_id: id, col_name: column });
-            if (!error) {
-                element.querySelector('i').classList.add('voted-icon');
-                element.style.pointerEvents = 'none';
-            }
+        // --- 詳細ページの表示 ---
+        async function showDetailPage(id) {
+            const { data } = await _supabase.from('videos').select('*').eq('id', id).single();
+            if (!data) return;
+
+            const html = `
+                <div class="detail-container">
+                    <div class="detail-left">
+                        <img src="${data.thumbnail_url}" class="detail-thumb">
+                        <a href="${data.video_url}" target="_blank" class="watch-btn" rel="noreferrer"><i class="fas fa-play"></i> Watch</a>
+                    </div>
+                    <div class="detail-right">
+                        ${data.title ? `<div class="tweet-text-box">${data.title}</div>` : ''}
+                        <a href="${data.tweet_url}" target="_blank" class="action-btn">View tweet</a>
+                        <a href="https://x.com/search?q=${encodeURIComponent(data.title)}" target="_blank" class="action-btn">Timeline</a>
+                        <a href="#" class="action-btn" onclick="vote(${data.id}, 'good')">Bookmark</a>
+                        <a href="index.html" class="action-btn">Watch more</a>
+                        <a href="#" class="action-btn btn-red"><i class="fas fa-flag"></i> Report abuse</a>
+                    </div>
+                </div>
+            `;
+            $('#mainContent').html(html);
+        }
+
+        async function vote(id, type) {
+            const col = type === 'good' ? 'good_count' : 'bad_count';
+            await _supabase.rpc('increment_vote', { row_id: id, col_name: col });
+            alert("Voted!");
         }
     </script>
 </body>
