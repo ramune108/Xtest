@@ -87,67 +87,67 @@
         </a>
     </nav>
 
-    <!-- JavaScript 処理 -->
     <script>
-        async function extractVideo() {
-            const urlInput = document.getElementById('tweetUrl').value;
-            const btn = document.getElementById('extractBtn');
-            const resultsContainer = document.getElementById('results');
+    async function extractVideo() {
+        const urlInput = document.getElementById('tweetUrl').value;
+        const btn = document.getElementById('extractBtn');
+        const resultsContainer = document.getElementById('results');
 
-            if (!urlInput) {
-                alert("URLを入力してください");
-                return;
-            }
-
-            // UIを読み込み中状態にする
-            btn.disabled = true;
-            btn.innerText = "解析中...";
-            resultsContainer.innerHTML = '<div class="loading-spinner"></div>';
-
-            try {
-                // Vercel上のPython API (/api) へリクエストを送信
-                const response = await fetch("/api", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ url: urlInput })
-                });
-
-                const data = await response.json();
-
-                if (data.status === "success") {
-                    // 成功：動画プレイヤーと登録ボタンを表示
-                    resultsContainer.innerHTML = `
-                        <div class="preview-container">
-                            <p style="font-size:0.9rem; font-weight:bold; margin-bottom:10px; color:#1da1f2;">動画が見つかりました！</p>
-                            <video src="${data.url}" controls class="preview-video" poster="${data.thumbnail}"></video>
-                            <button class="save-confirm-btn" onclick="saveToDatabase('${data.url}', '${urlInput}', '${data.thumbnail}')">
-                                この動画をランキングに登録
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    // エラーメッセージの表示
-                    resultsContainer.innerHTML = `
-                        <div style="color:red; font-size:0.9rem; margin-top:15px; padding:10px; background:#fff0f0; border-radius:8px;">
-                            エラー: ${data.message}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                resultsContainer.innerHTML = '<p style="color:red; margin-top:15px;">サーバー通信エラーが発生しました。</p>';
-            } finally {
-                // ボタンを元に戻す
-                btn.disabled = false;
-                btn.innerText = "動画を抽出する";
-            }
+        if (!urlInput) {
+            alert("URLを入力してください");
+            return;
         }
 
-        // --- 次のステップで実装するデータベース保存用関数 ---
-        function saveToDatabase(videoUrl, tweetUrl, thumbUrl) {
-            alert("抽出に成功しました！\n次は『ステップ3：Supabaseに保存』を実装しましょう。\nこれで本当のランキングサイトになります。");
-            console.log("保存準備:", { videoUrl, tweetUrl, thumbUrl });
+        // UIを読み込み中状態にする
+        btn.disabled = true;
+        btn.innerText = "解析中...";
+        resultsContainer.innerHTML = '<div class="loading-spinner"></div>';
+
+        try {
+            // Vercel上のPython API (/api) へリクエストを送信
+            const response = await fetch("/api", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: urlInput })
+            });
+
+            const data = await response.json();
+
+            if (data.status === "success") {
+                // 成功：動画プレイヤーと登録ボタンを表示
+                resultsContainer.innerHTML = `
+                    <div class="preview-container">
+                        <p style="font-size:0.9rem; font-weight:bold; margin-bottom:10px; color:#1da1f2;">動画が見つかりました！</p>
+                        <video src="${data.url}" controls class="preview-video" poster="${data.thumbnail}"></video>
+                        <button class="save-confirm-btn" onclick="saveToDatabase('${data.url}', '${urlInput}', '${data.thumbnail}')">
+                            この動画をランキングに登録
+                        </button>
+                    </div>
+                `;
+            } else {
+                // エラーメッセージの表示
+                resultsContainer.innerHTML = `
+                    <div style="color:red; font-size:0.9rem; margin-top:15px; padding:10px; background:#fff0f0; border-radius:8px;">
+                        エラー: ${data.message}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            // 通信失敗時の処理
+            console.error("Error:", error);
+            resultsContainer.innerHTML = '<p style="color:red; margin-top:15px;">サーバー通信エラーが発生しました。</p>';
+        } finally {
+            // 成功しても失敗してもボタンを元に戻す
+            btn.disabled = false;
+            btn.innerText = "動画を抽出する";
         }
-    </script>
+    } // <-- ここで extractVideo 関数が閉じる
+
+    // データベース保存用の関数
+    function saveToDatabase(videoUrl, tweetUrl, thumbUrl) {
+        alert("抽出に成功しました！\n次は『ステップ3：Supabaseに保存』を実装しましょう！");
+        console.log("保存準備:", { videoUrl, tweetUrl, thumbUrl });
+    } // <-- ここで saveToDatabase 関数が閉じる
+</script>
 </body>
 </html>
