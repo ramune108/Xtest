@@ -3,8 +3,8 @@ body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bo
 * { box-sizing: border-box; }
 
 /* ヘッダー (Twitterブルー) */
-.site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 40px; text-align: center; line-height: 20px; position: sticky; top: 0; z-index: 1000; }
-.site-header a { text-decoration: none; color: #FFF; font-weight: bold; }
+.site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 40px; text-align: center; line-height: 25px; position: sticky; top: 0; z-index: 1000; }
+.site-header a { text-decoration: none; color: #FFF; font-weight: bold; font-size: 1.1rem; }
 
 /* 期間選択 (monsnodeスタイル) */
 .sort-options {
@@ -13,49 +13,59 @@ body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bo
 }
 .sort-btn {
     padding: 8px 6px; color: #fff; border-radius: 4px; text-decoration: none; 
-    font-weight: bold; text-align: center; font-size: 13px; opacity: 0.3;
+    font-weight: bold; text-align: center; font-size: 13px; opacity: 0.4; transition: opacity 0.2s;
 }
 .sort-btn.active { opacity: 1; }
+.btn-1d { background-color: #28a745; }
+.btn-3d { background-color: #007bff; }
+.btn-all { background-color: #ffc107; }
 
-/* --- 動画タイルレイアウト (monsnodeの listn 構造) --- */
-#videoGrid {
-    display: flex; flex-wrap: wrap; justify-content: center; padding: 5px;
+/* --- 動画タイルレイアウト (提供HTMLの .listn 構造を再現) --- */
+.video-grid {
+    display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; max-width: 1000px; margin: 0 auto;
 }
 
 .listn {
     position: relative; width: calc(50% - 10px); margin: 5px;
     background: #fff; border-radius: 4px; overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; flex-direction: column;
 }
 
 .listn img {
-    width: 100%; height: auto; min-height: 100px; display: block;
+    width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #000;
 }
 
-/* ユーザー名 (monsnodeスタイル) */
+/* ユーザー名表示 (提供HTML準拠) */
 .user {
-    position: absolute; bottom: 35px; left: 0; width: 100%;
-    background: rgba(255, 255, 255, 0.7); padding: 2px 5px;
+    padding: 5px 8px; font-size: 11px; background: rgba(255,255,255,0.8);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.user span { font-size: 10px; color: #333; }
+.user a { color: #555; text-decoration: none; }
 
-/* 投票ボタン (monsnodeスタイル) */
+/* 投票ボタン (提供HTML準拠) */
 .vote {
     display: flex; height: 35px; border-top: 1px solid #eee;
 }
 .vote a {
     flex: 1; display: flex; align-items: center; justify-content: center;
-    text-decoration: none; font-size: 14px;
+    text-decoration: none; font-size: 13px; color: #888;
 }
-.vote .up { color: #28a745; background: #fff; border-right: 1px solid #eee; }
-.vote .down { color: #dc3545; background: #fff; }
+.vote .up { color: #28a745; border-right: 1px solid #eee; }
+.vote .down { color: #dc3545; }
 .voted-icon { opacity: .4; pointer-events: none; }
 
 /* --- 共通コンポーネント --- */
-.input-container { padding: 20px; background: #fff; text-align: center; }
-.text-input { width: 100%; max-width: 400px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
-.primary-btn { width: 100%; max-width: 400px; padding: 12px; background: #00acee; color: #fff; border: none; border-radius: 4px; font-weight: bold; }
+.input-container { padding: 25px 15px; background: #fff; text-align: center; border-bottom: 1px solid #eee; }
+.text-input { width: 100%; max-width: 500px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; font-size: 1rem; outline: none; }
+.primary-btn { width: 100%; max-width: 500px; padding: 14px; background: #00acee; color: #fff; border: none; border-radius: 4px; font-weight: bold; font-size: 1rem; cursor: pointer; }
 
+/* 下部ナビゲーション */
 .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 2000; }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 10px; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 11px; }
 .nav-item.active { color: #00acee; }
+.nav-icon { font-size: 18px; margin-bottom: 2px; }
+
+/* プレビュー表示 (Saveページ用) */
+.preview-box { margin: 15px auto; max-width: 470px; padding: 10px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.preview-video { width: 100%; border-radius: 6px; background: #000; margin-bottom: 10px; }
+.download-btn { background-color: #28a745; color: #fff; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
