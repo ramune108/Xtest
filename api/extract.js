@@ -5,47 +5,29 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { url } = req.body;
-  if (!url) return res.status(400).json({ error: "URL is required" });
+  try {
+    const { url } = req.body;
+    
+    // Vercelの設定からAPIキーを読み込む
+    const apiKey = process.env.RAPIDAPI_KEY;
 
-  // 現在稼働している可能性が高い予備サーバーのリスト
-  const instances = [
-    "https://cobalt-api.lunes.host/",
-    "https://cobalt.api.0x0.st/",
-    "https://api.cobalt.tools/", // 本家（時々動く）
-    "https://cobalt.kwiateusz.com/"
-  ];
+    // RapidAPI の Twitter抽出APIにリクエスト
+    const response = await fetch("https://twitter-video-downloader-api.p.rapidapi.com/index", {
+      method: "POST",
+      headers: {
+        "x-rapidapi-key": apiKey,
+        "x-rapidapi-host": "twitter-video-downloader-api.p.rapidapi.com",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({ url: url })
+    });
 
-  for (const instance of instances) {
-    try {
-      console.log(`試行中のサーバー: ${instance}`);
-      const response = await fetch(instance, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          url: url,
-          videoQuality: "720"
-        }),
-        signal: AbortSignal.timeout(5000) // 5秒でタイムアウトして次へ
-      });
+    const data = await response.json();
+    
+    // APIからのレスポンスをフロントエンドにそのまま返す
+    return res.status(200).json(data);
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.url || data.picker) {
-          return res.status(200).json(data); // 成功したら即座に返す
-        }
-      }
-    } catch (e) {
-      console.log(`${instance} でエラー: ${e.message}`);
-      continue; // エラーなら次のサーバーを試す
-    }
+  } catch (error) {
+    return res.status(500).json({ error: "抽出に失敗しました: " + error.message });
   }
-
-  // すべて失敗した場合
-  return res.status(500).json({ 
-    error: "現在すべての抽出サーバーが混み合っています。少し時間を置いてから再度お試しください。" 
-  });
 }
