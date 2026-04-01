@@ -14,7 +14,7 @@
     <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
     <div id="contentArea">
-        <!-- JSで一覧または詳細を切り替え -->
+        <!-- JSで一覧または詳細が表示されます -->
     </div>
 
     <nav class="bottom-nav">
@@ -31,33 +31,33 @@
         $(document).ready(function() {
             const params = new URLSearchParams(window.location.search);
             const vID = params.get('v');
-            if (vID) { showDetail(vID); } else { showRanking(); }
+            const period = params.get('p') || 'all';
+            if (vID) { showDetail(vID); } else { showRanking(period); }
         });
 
-        // --- ランキング一覧表示 ---
-        async function showRanking() {
-            // 期間選択ボタンを表示
+        async function showRanking(period) {
             let headerHtml = `
                 <div class="sort-options">
-                    <a class="sort-btn btn-1d" href="index.html?p=1d">24h</a>
-                    <a class="sort-btn btn-3d" href="index.html?p=3d">3d</a>
-                    <a class="sort-btn btn-all active" href="index.html">All</a>
+                    <a class="sort-btn btn-1d ${period==='1d'?'active':''}" href="index.html?p=1d">24h</a>
+                    <a class="sort-btn btn-3d ${period==='3d'?'active':''}" href="index.html?p=3d">3d</a>
+                    <a class="sort-btn btn-all ${period==='all'?'active':''}" href="index.html">All</a>
                 </div>
-                <div class="video-grid" id="videoGrid">Loading...</div>
+                <div class="video-grid" id="videoGrid"></div>
             `;
             $('#contentArea').html(headerHtml);
 
-            const { data } = await _supabase.from('videos').select('*').order('save_count', { ascending: false }).limit(40);
-            
+            let query = _supabase.from('videos').select('*').order('save_count', { ascending: false });
+            if (period === '1d') query = query.gte('created_at', new Date(Date.now() - 86400000).toISOString());
+            if (period === '3d') query = query.gte('created_at', new Date(Date.now() - 259200000).toISOString());
+
+            const { data } = await query.limit(50);
+            if (!data) return;
+
             const gridHtml = data.map(v => `
                 <div class="listn">
-                    <!-- 画像クリックで動画再生 -->
-                    <a href="${v.video_url}" target="_blank" rel="noreferrer">
-                        <img src="${v.thumbnail_url}">
-                    </a>
+                    <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
                     <div class="tile-controls">
                         <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
-                        <!-- 名前クリックで詳細ページ -->
                         <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
                         <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
                     </div>
@@ -66,7 +66,6 @@
             $('#videoGrid').html(gridHtml);
         }
 
-        // --- 詳細ページ表示 ---
         async function showDetail(id) {
             const { data: v } = await _supabase.from('videos').select('*').eq('id', id).single();
             if (!v) return;
@@ -80,10 +79,10 @@
                     <div class="detail-right">
                         ${v.title ? `<div class="tweet-text-content">${v.title}</div>` : ''}
                         <a href="${v.tweet_url}" target="_blank" class="action-btn">View tweet</a>
-                        <a href="https://x.com/search?q=${encodeURIComponent(v.title)}" target="_blank" class="action-btn">Timeline</a>
+                        <a href="search.html?q=${encodeURIComponent(v.title)}" class="action-btn">Timeline</a>
                         <a href="javascript:void(0)" class="action-btn" onclick="vote(${v.id}, 'good')">Bookmark</a>
                         <a href="index.html" class="action-btn">Watch more</a>
-                        <a href="#" class="action-btn btn-red"><i class="fas fa-flag"></i> Report abuse</a>
+                        <a href="javascript:void(0)" class="action-btn btn-red" onclick="alert('Reported')"><i class="fas fa-flag"></i> Report abuse</a>
                     </div>
                 </div>
             `;
