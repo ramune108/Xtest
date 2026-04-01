@@ -10,11 +10,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
+
+    <header class="site-header">
+        <a href="index.html">Twitter Video Tools</a>
+    </header>
 
     <main class="input-container">
-        <input type="text" id="tweetUrl" class="text-input" placeholder="Paste X URL here...">
-        <button id="extractBtn" class="primary-btn" onclick="extractVideo()"><i class="fas fa-file-download"></i> Extract</button>
+        <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Paste Tweet URL to Save</p>
+        <input type="text" id="tweetUrl" class="text-input" placeholder="https://x.com/user/status/...">
+        <button id="extractBtn" class="primary-btn" onclick="extractVideo()">
+            <i class="fas fa-file-download"></i> Extract Video
+        </button>
         <div id="results"></div>
     </main>
 
@@ -25,34 +31,74 @@
     </nav>
 
     <script>
-        const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co'; 
+        const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let _supabase;
+
+        window.onload = () => {
+            _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        };
 
         async function extractVideo() {
-            const url = document.getElementById('tweetUrl').value;
+            const urlInput = document.getElementById('tweetUrl').value.trim();
+            const btn = document.getElementById('extractBtn');
             const resArea = document.getElementById('results');
-            resArea.innerHTML = '<p>Processing...</p>';
 
-            const response = await fetch("/api", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: url }) });
-            const data = await response.json();
+            if (!urlInput) { alert("URLを入力してください"); return; }
 
-            if (data.status === "success") {
-                resArea.innerHTML = `
-                    <div class="preview-box">
-                        <video src="${data.url}" controls class="preview-video"></video>
-                        <button class="download-btn" onclick="downloadAndReg('${data.url}', '${url}', '${data.thumbnail}', '${data.title}')">
-                            <i class="fas fa-download"></i> Download & Auto-Register
-                        </button>
-                    </div>
-                `;
-            } else { resArea.innerHTML = '<p style="color:red;">Failed to extract.</p>'; }
+            btn.disabled = true;
+            btn.innerText = "Extracting...";
+            resArea.innerHTML = '<p style="margin-top:20px;">Analyzing with yt-dlp...</p>';
+
+            try {
+                const response = await fetch("/api", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    resArea.innerHTML = `
+                        <div class="preview-box">
+                            <p style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:10px;">Success!</p>
+                            <video src="${data.url}" controls class="preview-video" poster="${data.thumbnail}"></video>
+                            <button class="download-btn" onclick="downloadAndReg('${data.url}', '${urlInput}', '${data.thumbnail}', '${data.title}')">
+                                <i class="fas fa-download"></i> Download & Auto-Register
+                            </button>
+                            <p style="font-size:0.7rem; color:#888; margin-top:10px;">※ランキングに自動追加されます</p>
+                        </div>
+                    `;
+                } else {
+                    resArea.innerHTML = `<p style="color:red; margin-top:20px;">Error: ${data.message}</p>`;
+                }
+            } catch (e) {
+                resArea.innerHTML = '<p style="color:red; margin-top:20px;">Connection Error.</p>';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Extract Video";
+            }
         }
 
         async function downloadAndReg(vUrl, tUrl, thumb, title) {
-            window.open(vUrl, '_blank');
-            await _supabase.rpc('increment_save_count', { target_tweet_url: tUrl, target_video_url: vUrl, target_thumbnail_url: thumb, target_title: title });
-            alert("Success!");
+            // 動画を別タブで開く
+            const a = document.createElement('a');
+            a.href = vUrl;
+            a.rel = "noreferrer";
+            a.target = "_blank";
+            a.click();
+
+            // Supabaseへ登録（RPC関数呼び出し）
+            if (_supabase) {
+                await _supabase.rpc('increment_save_count', {
+                    target_tweet_url: tUrl,
+                    target_video_url: vUrl,
+                    target_thumbnail_url: thumb,
+                    target_title: title
+                });
+                alert("Saved & Registered to Ranking!");
+            }
         }
     </script>
 </body>
