@@ -9,19 +9,13 @@ export default async function handler(req, res) {
     const { url } = req.body;
     const apiKey = process.env.RAPIDAPI_KEY;
 
-    // デバッグ用ログ（VercelのLogsで確認可能。キーの最初の3文字だけ表示）
-    console.log("使用中のキー(頭3文字):", apiKey ? apiKey.substring(0, 3) : "未設定");
-
-    // URLからIDを抽出
-    const tweetId = url.split("/status/")[1]?.split("?")[0];
-    if (!tweetId) return res.status(400).json({ error: "URL形式が正しくありません" });
-
-    // Twttr API (twitter241) の公式設定に100%合わせる
-    const response = await fetch(`https://twitter241.p.rapidapi.com/tweet?id=${tweetId}`, {
+    // All Media Downloader (all-media-downloader1) の設定
+    // GETリクエストでURLを送る形式です
+    const response = await fetch(`https://all-media-downloader1.p.rapidapi.com/get?url=${encodeURIComponent(url)}`, {
       method: "GET",
       headers: {
         "x-rapidapi-key": apiKey,
-        "x-rapidapi-host": "twitter241.p.rapidapi.com" // ここが1文字でも違うとはねられます
+        "x-rapidapi-host": "all-media-downloader1.p.rapidapi.com"
       }
     });
 
