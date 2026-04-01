@@ -38,5 +38,53 @@
         <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span>検索</a>
         <a href="save.html" class="nav-item"><span class="nav-icon">➕</span>保存</a>
     </nav>
+
+    <script>
+    // 1. ページが読み込まれた時に実行する処理
+    window.onload = function() {
+        // URLからパラメータ（?p=...）を取得
+        const params = new URLSearchParams(window.location.search);
+        let period = params.get('p'); // '1d', '3d', '7d' などが入る
+
+        // パラメータが空（初回アクセスなど）の場合は、デフォルトを '1d' にする
+        if (!period) {
+            period = '1d';
+        }
+
+        // 2. 選択されているタブの色を変える（activeクラスの付け替え）
+        updateTabUI(period);
+
+        // 3. その期間に応じたデータを表示する（今はまだダミーを表示）
+        loadRankingData(period);
+    };
+
+    // ボタンを押した時にURLを書き換えてページを再読み込みする関数
+    function setPeriod(p) {
+        // 現在のページのURLに ?p=... を付けて移動する
+        window.location.href = window.location.pathname + '?p=' + p;
+    }
+
+    // タブの見た目を更新する関数
+    function updateTabUI(activePeriod) {
+        // 一旦すべてのタブから active クラスを消す
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => tab.classList.remove('active'));
+
+        // 選択された期間のタブだけに active クラスを付ける
+        const activeTab = document.getElementById('tab-' + activePeriod);
+        if (activeTab) {
+            activeTab.classList.add('active');
+        }
+    }
+
+    // データベースからデータを取ってくる関数（将来的にSupabaseと繋ぐ場所）
+    function loadRankingData(period) {
+        console.log("現在表示中の期間: " + period);
+        
+        // ここで期間（1d, 3d, 7d）に応じて
+        // データベースから「保存数が多い順」にデータを取ってくる処理を書くことになります。
+        // 今はコンソールにログを出すだけにしておきます。
+    }
+</script>
 </body>
 </html>
