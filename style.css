@@ -1,84 +1,65 @@
 /* --- 全体設定 --- */
-body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 80px; }
+body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 80px; width: 100%; overflow-x: hidden; }
 * { box-sizing: border-box; }
 
-/* ヘッダー */
-.site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 40px; text-align: center; line-height: 25px; position: sticky; top: 0; z-index: 1000; }
+/* ヘッダー (Twitterブルー) */
+.site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 45px; text-align: center; line-height: 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); width: 100%; }
 .site-header a { text-decoration: none; color: #FFF; font-weight: bold; font-size: 1.1rem; }
 
-/* 期間選択ボタン */
-.sort-options {
-    margin: 20px auto; width: 100%; max-width: 470px; padding: 0 10px; 
-    display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px;
-}
-.sort-btn {
-    padding: 8px 6px; color: #fff; border-radius: 4px; text-decoration: none; 
-    font-weight: bold; text-align: center; font-size: 13px; opacity: 0.4;
-}
+/* 期間選択 */
+.sort-options { margin: 15px auto; width: 95%; max-width: 500px; display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 8px; }
+.sort-btn { padding: 8px 5px; color: #fff; border-radius: 4px; text-decoration: none; font-weight: bold; text-align: center; font-size: 12px; opacity: 0.4; }
 .sort-btn.active { opacity: 1; }
 .btn-1d { background-color: #28a745; }
 .btn-3d { background-color: #007bff; }
 .btn-all { background-color: #ffc107; }
 
-/* --- 【重要】動画タイルレイアウト (画像依存の高さ) --- */
+/* --- 【重要】画面いっぱいの多段タイルレイアウト --- */
 .video-grid {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start; /* 各タイルの高さが違ってもOK */
+    width: 100%;
     padding: 5px;
-    max-width: 1000px;
-    margin: 0 auto;
+    column-count: 2; /* スマホのデフォルトは2列 */
+    column-gap: 5px; /* タイル間の横の隙間 */
 }
 
+/* 画面幅が広い場合の列数調整 */
+@media (min-width: 480px) { .video-grid { column-count: 3; } }
+@media (min-width: 768px) { .video-grid { column-count: 4; } }
+@media (min-width: 1024px) { .video-grid { column-count: 6; } }
+
 .listn {
-    position: relative;
-    width: calc(50% - 10px); /* 2列表示 */
-    margin: 5px;
+    break-inside: avoid; /* タイルが途中で切れないようにする */
+    margin-bottom: 8px; /* 下のタイルとの隙間 */
     background: #fff;
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    height: auto; /* 固定比率を解除 */
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* カラム幅いっぱいに広がる */
 }
 
 .listn img {
     width: 100%;
-    height: auto; /* 画像の本来の比率を維持 */
+    height: auto; /* 画像本来の高さ（比率）を維持 */
     display: block;
     background: #000;
 }
 
-/* ユーザー名 (画像の下に自然に配置) */
-.user {
-    padding: 4px 8px;
-    font-size: 10px;
-    background: rgba(255,255,255,0.8);
-    color: #555;
-    border-bottom: 1px solid #f0f0f0;
-}
+/* ユーザー名と投票エリア */
+.user { padding: 4px 6px; font-size: 9px; background: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #f0f0f0; }
 .user a { color: #555; text-decoration: none; }
-
-/* 投票・統計バー */
-.vote {
-    display: flex;
-    height: 35px;
-    background: #fff;
-}
-.vote a {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    font-size: 13px;
-    color: #888;
-}
+.vote { display: flex; height: 32px; background: #fff; }
+.vote a { flex: 1; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 12px; color: #888; }
 .vote .up { color: #28a745; border-right: 1px solid #eee; }
 .vote .down { color: #dc3545; }
 .voted-icon { opacity: .4; pointer-events: none; }
 
-/* 下部ナビゲーション */
+/* 共通コンポーネント */
+.input-container { padding: 20px; background: #fff; text-align: center; border-bottom: 1px solid #eee; }
+.text-input { width: 100%; max-width: 500px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; font-size: 1rem; }
+.primary-btn { width: 100%; max-width: 500px; padding: 12px; background: #00acee; color: #fff; border: none; border-radius: 4px; font-weight: bold; }
 .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 2000; }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 11px; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 10px; }
 .nav-item.active { color: #00acee; }
-.nav-icon { font-size: 20px; }
+.nav-icon { font-size: 18px; margin-bottom: 2px; }
