@@ -80,9 +80,10 @@
     </nav>
 
     <script>
-        // save.html 内の extractVideo 関数の中身を一部修正
-async function extractVideo() {
-    // ...（中略：入力チェックやボタン無効化などはそのまま）
+        async function extractVideo() {
+    const urlInput = document.getElementById('tweetUrl').value;
+    const resultsContainer = document.getElementById('results');
+    resultsContainer.innerHTML = '通信中...';
 
     try {
         const response = await fetch("/api/extract", {
@@ -92,44 +93,24 @@ async function extractVideo() {
         });
 
         const data = await response.json();
+        console.log("受信データ:", data);
 
-        // v10では status ではなく、直接 url や status が返ってきます
-        // data.status が "stream" か "picker"、あるいは data.url があれば成功
-        if (data.status === "stream" || data.status === "picker" || data.url) {
+        // 成功パターン（urlがある場合）
+        if (data.url) {
             showPreview(data, urlInput);
-        } else {
-            // エラー表示
-            resultsContainer.innerHTML = `
-                <div style="color:red; padding:10px; background:#fff1f1; border-radius:8px; margin-top:10px;">
-                    <p>APIエラー: ${data.text || "取得に失敗しました"}</p>
-                </div>
-            `;
+        } 
+        // 失敗パターン（textに理由がある場合）
+        else if (data.text) {
+            resultsContainer.innerHTML = `<p style="color:red;">エラー: ${data.text}</p>`;
         }
-    } catch (error) {
-        // ...（エラー処理）
-    }
-}
+        // それ以外（未知のデータ形式）
+        else {
+            resultsContainer.innerHTML = `<p>データは届きましたが、動画URLが見つかりません。<br>内容: ${JSON.stringify(data)}</p>`;
+        }
 
-function showPreview(data, originalUrl) {
-    const resultsContainer = document.getElementById('results');
-    
-    // v10のレスポンス形式に合わせてURLを取得
-    const videoUrl = data.url; 
-    
-    if (!videoUrl) {
-        alert("動画URLが見つかりませんでした");
-        return;
+    } catch (e) {
+        resultsContainer.innerHTML = "エラー: " + e.message;
     }
-
-    resultsContainer.innerHTML = `
-        <div class="preview-container">
-            <p style="font-weight: bold; margin-bottom: 10px;">動画を確認してください</p>
-            <video src="${videoUrl}" controls class="preview-video"></video>
-            <button class="save-confirm-btn" onclick="saveToDatabase('${videoUrl}', '${originalUrl}')">
-                この動画をランキングに登録
-            </button>
-        </div>
-    `;
 }
     </script>
 </body>
