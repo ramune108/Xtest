@@ -10,9 +10,13 @@
     <header class="header"><span class="logo">動画を保存</span></header>
 
     <div class="input-container">
-        <p style="font-size: 0.8rem; margin-bottom: 10px; color: #666;">X(Twitter)のツイートURLを貼り付けてください</p>
-        <input type="text" class="text-input" placeholder="https://x.com/username/status/...">
-        <button class="primary-btn">動画を抽出・保存</button>
+    <p style="font-size: 0.8rem; margin-bottom: 10px; color: #666;">X(Twitter)のツイートURLを貼り付けてください</p>
+    <input type="text" class="text-input" placeholder="https://x.com/username/status/...">
+    <!-- onclick を追加 -->
+    <button class="primary-btn" onclick="extractVideo()">動画を抽出・保存</button>
+
+    <!-- 抽出結果が表示されるエリア -->
+    <div id="results"></div>
     </div>
 
     <nav class="bottom-nav">
@@ -20,5 +24,78 @@
         <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span>検索</a>
         <a href="save.html" class="nav-item active"><span class="nav-icon">➕</span>保存</a>
     </nav>
+    <script>
+    async function extractVideo() {
+        const urlInput = document.querySelector('.text-input').value;
+        const btn = document.querySelector('.primary-btn');
+        const resultsContainer = document.getElementById('results'); // 結果を表示するエリア
+
+        if (!urlInput) {
+            alert("URLを入力してください");
+            return;
+        }
+
+        // ボタンを「取得中...」にして連打を防ぐ
+        btn.disabled = true;
+        btn.innerText = "取得中...";
+
+        try {
+            // Cobalt API を叩く (パブリックなインスタンスを使用)
+            const response = await fetch("https://api.cobalt.tools/api/json", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    url: urlInput,
+                    videoQuality: "720", // 画質指定
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.status === "stream" || data.status === "picker") {
+                // 成功：動画情報を表示する
+                showPreview(data, urlInput);
+            } else {
+                alert("動画が見つかりませんでした。URLを確認してください。");
+            }
+
+        } catch (error) {
+            console.error("Error:", error);
+            alert("エラーが発生しました。時間を置いて試してください。");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "動画を抽出・保存";
+        }
+    }
+
+    // 抽出した動画をプレビュー表示する関数
+    function showPreview(data, originalUrl) {
+        const container = document.getElementById('results');
+        
+        // Cobalt APIから返ってくるデータに合わせて調整
+        // data.url が動画の直リンク、data.picker[0].thumb などがサムネイル
+        const videoUrl = data.url; 
+        
+        container.innerHTML = `
+            <div style="margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 10px;">
+                <h3>動画が見つかりました！</h3>
+                <video src="${videoUrl}" controls style="width: 100%; margin: 10px 0; border-radius: 8px;"></video>
+                <p style="font-size: 0.8rem; color: #666;">※この動画をランキングに登録します</p>
+                <button class="primary-btn" style="background: #28a745;" onclick="saveToDatabase('${videoUrl}', '${originalUrl}')">
+                    ランキングに登録する
+                </button>
+            </div>
+        `;
+    }
+
+    // 次のステップ：データベースに保存する関数（今はまだ空）
+    function saveToDatabase(videoUrl, tweetUrl) {
+        alert("次のステップで、この情報をデータベース(Supabase)に保存します！");
+        // ここに Step 3 の処理を書きます
+    }
+</script>
 </body>
 </html>
