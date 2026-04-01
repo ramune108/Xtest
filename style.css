@@ -1,43 +1,70 @@
 /* --- 全体設定 --- */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", sans-serif; background-color: #f8f9fa; color: #333; padding-bottom: 80px; /* ボトムナビの高さ分 */ }
+body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 80px; }
+* { box-sizing: border-box; }
 
-/* --- ヘッダー --- */
-.header { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-.logo { font-size: 1.1rem; font-weight: bold; color: #1da1f2; text-decoration: none; }
+/* --- ヘッダー（Twitterブルー） --- */
+.site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 45px; text-align: center; line-height: 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.site-header a { text-decoration: none; color: #FFF; font-weight: bold; font-size: 1.1rem; }
 
-/* --- 入力エリア（検索・保存ページ用） --- */
-.input-container { padding: 20px; background: #fff; border-bottom: 1px solid #eee; }
-.text-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 12px; font-size: 1rem; outline: none; }
-.text-input:focus { border-color: #1da1f2; }
-.primary-btn { width: 100%; padding: 14px; background: #1da1f2; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: opacity 0.2s; }
-.primary-btn:active { opacity: 0.8; }
-
-/* --- ランキングの期間切り替えタブ --- */
-.tabs { display: flex; justify-content: center; background: #fff; padding: 10px; gap: 8px; border-bottom: 1px solid #eee; }
-.tab { padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; background: #fff; font-size: 0.9rem; color: #666; cursor: pointer; }
-.tab.active { background: #1da1f2; color: #fff; border-color: #1da1f2; }
+/* --- 期間選択ボタン（Rankingページ用） --- */
+.sort-options {
+    margin: 15px auto; width: 100%; max-width: 470px; padding: 0 10px; 
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px;
+}
+.sort-btn {
+    padding: 10px 5px; color: #fff; border-radius: 5px; text-decoration: none; 
+    font-weight: bold; text-align: center; font-size: 12px; opacity: 0.5; transition: opacity 0.2s;
+}
+.sort-btn.active { opacity: 1; }
+.btn-1d { background-color: #28a745; } /* 24h: 緑 */
+.btn-3d { background-color: #007bff; } /* 3d: 青 */
+.btn-all { background-color: #ffc107; } /* All: 黄 */
 
 /* --- 2列動画グリッド --- */
-.video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-.video-card { position: relative; background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); aspect-ratio: 9/16; }
-.thumb { width: 100%; height: 100%; object-fit: cover; }
+.video-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px;
+    max-width: 1000px; margin: 0 auto;
+}
 
-/* --- カード内のリンクとXアイコン --- */
-.main-link { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-.x-link { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 10; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
-.x-icon { width: 16px; fill: #000; }
+/* --- 動画タイル（.listn） --- */
+.listn {
+    position: relative; background: #fff; border-radius: 6px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); aspect-ratio: 9/16; display: flex; flex-direction: column;
+}
+.listn img { width: 100%; height: 100%; object-fit: cover; background: #000; }
 
-/* --- 下部評価バー（カード内） --- */
-.rating-bar { position: absolute; bottom: 0; width: 100%; height: 42px; background: rgba(255,255,255,0.95); display: flex; justify-content: space-around; align-items: center; z-index: 10; border-top: 1px solid rgba(0,0,0,0.05); }
-.vote-btn { border: none; background: none; color: #444; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 4px; padding: 5px; cursor: pointer; }
+/* --- ユーザー名オーバーレイ（上部） --- */
+.user {
+    position: absolute; top: 0; width: 100%; padding: 4px 8px; font-size: 10px; 
+    background: rgba(255,255,255,0.8); color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 5;
+}
+.user a { color: #555; text-decoration: none; }
 
-/* --- 下部ナビゲーション --- */
-.bottom-nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 0.75rem; }
-.nav-item.active { color: #1da1f2; }
-.nav-icon { font-size: 1.4rem; margin-bottom: 2px; }
+/* --- 投票・統計バー（下部） --- */
+.vote-bar {
+    position: absolute; bottom: 0; width: 100%; display: flex; justify-content: space-between; 
+    align-items: center; padding: 5px 8px; background: rgba(255,255,255,0.9); z-index: 5; border-top: 1px solid #eee;
+}
+.save-count { font-size: 11px; color: #777; font-weight: bold; }
+.vote-buttons { display: flex; gap: 8px; }
+.vote-link { color: #ccc; text-decoration: none; font-size: 15px; }
+.vote-link.up:hover, .vote-link.up.active { color: #28a745; }
+.vote-link.down:hover, .vote-link.down.active { color: #dc3545; }
+.voted { opacity: 0.3; pointer-events: none; }
 
-/* --- 動画プレビュー表示（保存ページ用） --- */
-.preview-container { margin-top: 20px; padding: 20px; background: #fff; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-.preview-video { width: 100%; border-radius: 10px; margin-bottom: 15px; background: #000; }
+/* --- 入力エリア（Search / Saveページ用） --- */
+.input-container { padding: 25px 15px; background: #fff; border-bottom: 1px solid #eee; text-align: center; }
+.text-input { width: 100%; max-width: 500px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; font-size: 1rem; outline: none; }
+.text-input:focus { border-color: #00acee; }
+.primary-btn { width: 100%; max-width: 500px; padding: 14px; background: #00acee; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+
+/* --- プレビュー表示（Saveページ用） --- */
+.preview-box { margin: 15px auto; max-width: 470px; padding: 10px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.preview-video { width: 100%; border-radius: 6px; background: #000; margin-bottom: 10px; }
+.download-btn { background-color: #28a745; color: #fff; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+/* --- 下部ナビゲーション（タブバー） --- */
+.bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 2000; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 10px; }
+.nav-item.active { color: #00acee; }
+.nav-icon { font-size: 18px; margin-bottom: 3px; }
