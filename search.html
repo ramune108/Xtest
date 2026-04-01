@@ -39,16 +39,25 @@
             if (data.length === 0) { grid.innerHTML = '<p>No results found.</p>'; return; }
 
             grid.innerHTML = data.map(v => `
-                <div class="listn" id="${v.id}" style="position: relative;">
-                    <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
-                    <div class="user"><a href="${v.tweet_url}" target="_blank"><span>@${v.title ? v.title.substring(0, 10) : ''}</span></a></div>
-                    <div class="vote">
-                        <a href="javascript:void(0)" class="up"><div><span><i class="fas fa-thumbs-up"></i> ${v.save_count}</span></div></a>
-                        <a href="javascript:void(0)" class="down"><div><span><i class="fas fa-thumbs-down"></i></span></div></a>
-                    </div>
-                </div>
-            `).join('');
-        }
-    </script>
+                <div class="listn">
+        <a href="${v.video_url}" target="_blank" rel="noreferrer">
+            <img src="${v.thumbnail_url}" loading="lazy">
+        </a>
+        <div class="user">
+            <a href="${v.tweet_url}" target="_blank">
+                <div><span>@${v.title ? v.title.substring(0, 10) : ''}</span></div>
+            </a>
+            </div>
+            <div class="vote">
+                <a href="javascript:void(0)" class="up">
+                    <div><span><i class="fas fa-thumbs-up"></i> ${v.save_count}</span></div>
+                </a>
+                <a href="javascript:void(0)" class="down">
+                    <div><span><i class="fas fa-thumbs-down"></i></span></div>
+                </a>
+            </div>
+        </div>
+    `).join('');
+</script>
 </body>
 </html>
