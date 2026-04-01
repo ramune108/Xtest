@@ -1,0 +1,37 @@
+/* 全体設定 */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; color: #333; padding-bottom: 70px; }
+
+/* ヘッダー */
+.header { background: #fff; padding: 15px; text-align: center; border-bottom: 1px solid #eee; sticky; top: 0; z-index: 100; }
+.logo { font-size: 1.2rem; font-weight: bold; color: #1da1f2; text-decoration: none; }
+
+/* 期間選択タブ (Ranking用) */
+.tabs { display: flex; justify-content: center; background: #fff; padding: 10px; gap: 8px; border-bottom: 1px solid #eee; }
+.tab { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; background: #fff; font-size: 0.9rem; color: #666; cursor: pointer; }
+.tab.active { background: #1da1f2; color: #fff; border-color: #1da1f2; }
+
+/* 2列動画グリッド */
+.video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+.video-card { position: relative; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); aspect-ratio: 9/16; }
+.thumb { width: 100%; height: 100%; object-fit: cover; }
+
+/* カード内のリンクとボタン */
+.main-link { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.x-link { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; justify-content: center; align-items: center; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.x-icon { width: 14px; fill: #000; }
+
+/* 評価オーバーレイ */
+.rating-bar { position: absolute; bottom: 0; width: 100%; height: 40px; background: rgba(255,255,255,0.9); display: flex; justify-content: space-around; align-items: center; z-index: 10; font-size: 0.8rem; }
+.vote-btn { border: none; background: none; color: #444; font-weight: bold; }
+
+/* 下部ナビゲーション */
+.bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 1000; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 0.7rem; }
+.nav-item.active { color: #1da1f2; }
+.nav-icon { font-size: 1.2rem; margin-bottom: 2px; }
+
+/* 入力エリア（検索・保存用） */
+.input-container { padding: 20px; background: #fff; }
+.text-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-size: 1rem; }
+.primary-btn { width: 100%; padding: 12px; background: #1da1f2; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; }
