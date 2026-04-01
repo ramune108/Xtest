@@ -3,36 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保存ランキング</title>
+    <title>保存ランキング - 人気の動画一覧</title>
     <link rel="stylesheet" href="style.css">
+    <meta name="referrer" content="no-referrer"> <!-- ここでもリファラを隠すのが大事 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <header class="header"><a href="index.html" class="logo">保存ランキング</a></header>
-    
+    <header class="header">
+        <a href="index.html" class="logo">保存ランキング</a>
+    </header>
+
+    <!-- 期間選択タブ -->
     <div class="tabs">
-    <!-- 各ボタンに ID をつけて、クリック時に URL を変えるようにする -->
-    <button class="tab" id="tab-1d" onclick="setPeriod('1d')">1日</button>
-    <button class="tab" id="tab-3d" onclick="setPeriod('3d')">3日</button>
-    <button class="tab" id="tab-7d" onclick="setPeriod('7d')">1週間</button>
+        <button class="tab" id="tab-1d" onclick="loadRanking('1d')">1日</button>
+        <button class="tab" id="tab-3d" onclick="loadRanking('3d')">3日</button>
+        <button class="tab active" id="tab-all" onclick="loadRanking('all')">全期間</button>
     </div>
 
-    <div class="video-grid">
-        <!-- ダミーの動画カード（JavaScriptで動的に増やす部分） -->
-        <div class="video-card">
-            <img src="https://via.placeholder.com/200x350" class="thumb">
-            <a href="#" class="main-link"></a>
-            <a href="#" class="x-link">
-                <svg viewBox="0 0 24 24" class="x-icon"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-            </a>
-            <div class="rating-bar">
-                <button class="vote-btn">👍 120</button>
-                <button class="vote-btn">👎 2</button>
-            </div>
-        </div>
-        <!-- 複数並べるテスト -->
-        <div class="video-card"><img src="https://via.placeholder.com/200x350" class="thumb"><a href="#" class="main-link"></a><div class="rating-bar"><span>👍 85</span><span>👎 0</span></div></div>
+    <!-- ランキング表示エリア（2列タイル） -->
+    <div id="videoGrid" class="video-grid">
+        <!-- ここにJavaScriptで動画が並びます -->
     </div>
 
+    <!-- 下部ナビゲーション -->
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item active"><span class="nav-icon">🏆</span>ランキング</a>
         <a href="search.html" class="nav-item"><span class="nav-icon">🔍</span>検索</a>
@@ -40,51 +33,64 @@
     </nav>
 
     <script>
-    // 1. ページが読み込まれた時に実行する処理
-    window.onload = function() {
-        // URLからパラメータ（?p=...）を取得
-        const params = new URLSearchParams(window.location.search);
-        let period = params.get('p'); // '1d', '3d', '7d' などが入る
+        // --- 1. Supabaseの初期設定 ---
+        const SUPABASE_URL = 'あなたのProject URL'; 
+        const SUPABASE_KEY = 'あなたのanon public API Key';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // パラメータが空（初回アクセスなど）の場合は、デフォルトを '1d' にする
-        if (!period) {
-            period = '1d';
+        // ページ読み込み時に実行
+        window.onload = () => loadRanking('all');
+
+        // --- 2. ランキングデータを取得して表示する関数 ---
+        async function loadRanking(period) {
+            // タブの見た目を切り替え
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + period).classList.add('active');
+
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '<p style="text-align:center; grid-column: 1/3; padding:20px;">読み込み中...</p>';
+
+            let query = _supabase.from('videos').select('*').order('save_count', { ascending: false });
+
+            // 期間による絞り込み（簡易版）
+            const now = new Date();
+            if (period === '1d') {
+                const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000)).toISOString();
+                query = query.gte('created_at', yesterday);
+            } else if (period === '3d') {
+                const threeDaysAgo = new Date(now.getTime() - (3 * 24 * 60 * 60 * 1000)).toISOString();
+                query = query.gte('created_at', threeDaysAgo);
+            }
+
+            const { data, error } = await query.limit(20); // 上位20件
+
+            if (error || !data) {
+                grid.innerHTML = '<p style="text-align:center; grid-column: 1/3;">データがありません</p>';
+                return;
+            }
+
+            // HTMLを組み立てる
+            grid.innerHTML = data.map(video => `
+                <div class="video-card">
+                    <!-- サムネイル -->
+                    <img src="${video.thumbnail_url}" class="thumb" loading="lazy">
+                    
+                    <!-- 全面：動画への直リンク -->
+                    <a href="${video.video_url}" target="_blank" class="main-link" rel="noreferrer"></a>
+
+                    <!-- 右上：元ツイートへのリンク -->
+                    <a href="${video.tweet_url}" target="_blank" class="x-link">
+                        <svg viewBox="0 0 24 24" class="x-icon"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                    </a>
+
+                    <!-- 下部：保存数（評価バー） -->
+                    <div class="rating-bar">
+                        <span class="vote-btn">💾 ${video.save_count} 保存</span>
+                        <span class="vote-btn">👍 Good</span>
+                    </div>
+                </div>
+            `).join('');
         }
-
-        // 2. 選択されているタブの色を変える（activeクラスの付け替え）
-        updateTabUI(period);
-
-        // 3. その期間に応じたデータを表示する（今はまだダミーを表示）
-        loadRankingData(period);
-    };
-
-    // ボタンを押した時にURLを書き換えてページを再読み込みする関数
-    function setPeriod(p) {
-        // 現在のページのURLに ?p=... を付けて移動する
-        window.location.href = window.location.pathname + '?p=' + p;
-    }
-
-    // タブの見た目を更新する関数
-    function updateTabUI(activePeriod) {
-        // 一旦すべてのタブから active クラスを消す
-        const tabs = document.querySelectorAll('.tab');
-        tabs.forEach(tab => tab.classList.remove('active'));
-
-        // 選択された期間のタブだけに active クラスを付ける
-        const activeTab = document.getElementById('tab-' + activePeriod);
-        if (activeTab) {
-            activeTab.classList.add('active');
-        }
-    }
-
-    // データベースからデータを取ってくる関数（将来的にSupabaseと繋ぐ場所）
-    function loadRankingData(period) {
-        console.log("現在表示中の期間: " + period);
-        
-        // ここで期間（1d, 3d, 7d）に応じて
-        // データベースから「保存数が多い順」にデータを取ってくる処理を書くことになります。
-        // 今はコンソールにログを出すだけにしておきます。
-    }
-</script>
+    </script>
 </body>
 </html>
