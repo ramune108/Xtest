@@ -8,17 +8,20 @@ export default async function handler(req, res) {
   try {
     const { url } = req.body;
     
-    // Cobalt v10 の最新ルールに合わせて通信
-    const response = await fetch("https://api.cobalt.tools/", { // 末尾の /api/json を削除
+    // 本家ではなく、有志が公開している「オープンなサーバー」を使います
+    // ここを以下のいずれかに書き換えて試してみてください
+    const COBALT_INSTANCE = "https://cobalt.kwiateusz.com/"; 
+
+    const response = await fetch(COBALT_INSTANCE, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json" // これが必須になりました
+        "Accept": "application/json"
       },
       body: JSON.stringify({
         url: url,
         videoQuality: "720",
-        downloadMode: "video" // モードを明示的に指定
+        downloadMode: "video"
       })
     });
 
