@@ -81,71 +81,47 @@
 
     <script>
         async function extractVideo() {
-            const urlInput = document.getElementById('tweetUrl').value;
-            const btn = document.getElementById('extractBtn');
-            const resultsContainer = document.getElementById('results');
+    const urlInput = document.getElementById('tweetUrl').value;
+    const btn = document.getElementById('extractBtn');
+    const resultsContainer = document.getElementById('results');
 
-            if (!urlInput) {
-                alert("URLを入力してください");
-                return;
-            }
+    if (!urlInput) { alert("URLを入力してください"); return; }
 
-            // UIを読み込み中状態にする
-            btn.disabled = true;
-            btn.innerText = "抽出中...";
-            resultsContainer.innerHTML = '<div class="loading-spinner"></div>';
+    btn.disabled = true;
+    btn.innerText = "抽出中...";
+    resultsContainer.innerHTML = '<div class="loading-spinner"></div>';
 
-            try {
-                // VercelのAPI (/api/extract.js) を叩く
-                const response = await fetch("/api/extract", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ url: urlInput })
-                });
+    try {
+        const response = await fetch("/api/extract", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: urlInput })
+        });
 
-                const data = await response.json();
+        const data = await response.json();
+        
+        // --- デバッグ用：何が返ってきたかコンソールに表示 ---
+        console.log("APIからの返答:", data);
 
-                if (data.status === "stream" || data.status === "picker") {
-                    // 成功：プレビューを表示
-                    showPreview(data, urlInput);
-                } else {
-                    resultsContainer.innerHTML = "";
-                    alert("動画が見つかりませんでした。URLが正しいか、動画が含まれているか確認してください。");
-                }
-
-            } catch (error) {
-                console.error("Error:", error);
-                resultsContainer.innerHTML = "";
-                alert("通信エラーが発生しました。Vercelの設定を確認してください。");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "動画を抽出する";
-            }
-        }
-
-        function showPreview(data, originalUrl) {
-            const resultsContainer = document.getElementById('results');
-            
-            // Cobalt APIのレスポンスから動画URLを取得
-            // (picker形式の場合は最初の動画を使用)
-            const videoUrl = data.url || (data.picker && data.picker[0].url);
-            
+        if (data.status === "stream" || data.status === "picker") {
+            showPreview(data, urlInput);
+        } else {
+            // エラー内容を詳しく画面に表示
             resultsContainer.innerHTML = `
-                <div class="preview-container">
-                    <p style="font-weight: bold; margin-bottom: 10px;">動画を確認してください</p>
-                    <video src="${videoUrl}" controls class="preview-video"></video>
-                    <button class="save-confirm-btn" onclick="saveToDatabase('${videoUrl}', '${originalUrl}')">
-                        この動画をランキングに登録
-                    </button>
+                <div style="color:red; padding:10px; background:#fff1f1; border-radius:8px; margin-top:10px;">
+                    <p>APIエラーが発生しました：</p>
+                    <pre style="font-size:0.7rem; white-space:pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
                 </div>
             `;
         }
 
-        // ステップ3で実装する関数
-        function saveToDatabase(videoUrl, tweetUrl) {
-            alert("動画を抽出できました！\n次は『ステップ3：Supabaseに保存』を実装して、ランキングに反映させましょう。");
-            console.log("Saving:", { videoUrl, tweetUrl });
-        }
+    } catch (error) {
+        resultsContainer.innerHTML = `<p style="color:red;">通信エラー: ${error.message}</p>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "動画を抽出する";
+    }
+}
     </script>
 </body>
 </html>
