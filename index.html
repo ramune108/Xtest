@@ -5,72 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>Twitter Video Tools - 保存ランキング</title>
-    <!-- FontAwesomeの読み込み（ボタン用） -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <link rel="stylesheet" href="style.css">
     <!-- Supabaseの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* --- 提供コードのデザインを完全再現 --- */
-        body { font-family: sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 80px; }
-        
-        /* ヘッダー */
-        .site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 40px; text-align: center; line-height: 40px; position: sticky; top: 0; z-index: 1000; }
-        .site-header a { text-decoration: none; color: #FFF; font-weight: bold; }
-
-        /* 期間選択ボタン */
-        .sort-options {
-            margin: 20px auto; width: 100%; max-width: 470px; padding: 0 10px; 
-            display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 10px;
-        }
-        .sort-btn {
-            padding: 8px 6px; color: #fff; border-radius: 4px; text-decoration: none; 
-            font-weight: bold; text-align: center; font-size: 13px; opacity: 0.6;
-        }
-        .sort-btn.active { opacity: 1; }
-        .btn-24h { background-color: rgba(40, 167, 69, 1); }
-        .btn-3d { background-color: rgba(0, 123, 255, 1); }
-        .btn-7d { background-color: rgba(255, 193, 7, 1); }
-
-        /* 動画グリッド（2列タイル） */
-        .video-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px;
-            max-width: 1000px; margin: 0 auto;
-        }
-
-        /* 個別のタイル（.listn スタイル） */
-        .listn {
-            position: relative; background: #fff; border-radius: 8px; overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; flex-direction: column;
-        }
-        .listn img {
-            width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #000;
-        }
-
-        /* ユーザー名表示 */
-        .user {
-            padding: 5px 8px; font-size: 11px; background: rgba(255,255,255,0.9);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .user a { color: #555; text-decoration: none; }
-
-        /* 投票・統計エリア */
-        .vote-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 5px 8px; border-top: 1px solid #eee; background: #fff;
-        }
-        .save-count { font-size: 11px; color: #888; font-weight: bold; }
-        .vote-buttons { display: flex; gap: 10px; }
-        .vote-link { color: #ccc; text-decoration: none; font-size: 16px; transition: color 0.2s; }
-        .vote-link.up:hover { color: #28a745; }
-        .vote-link.down:hover { color: #dc3545; }
-        .voted { opacity: 0.4; pointer-events: none; } /* 投票後に薄くする */
-
-        /* 下部ナビゲーション */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 2000; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 11px; }
-        .nav-item.active { color: #00acee; }
-        .nav-icon { font-size: 20px; }
-    </style>
 </head>
 <body>
 
