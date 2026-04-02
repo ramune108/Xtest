@@ -62,7 +62,7 @@
                         <a href="${v.tweet_url}" target="_blank" class="x-link-top">
                             <i class="fa-brands fa-x-twitter" style="color:white !important;"></i>
                         </a>
-                        <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
+                        <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${encodeURI(v.thumbnail_url)}"></a>
                         <div class="tile-controls">
                             <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
                             <a href="index.html?v=${v.id}" class="name-badge">${v.title ? escapeHTML(v.title.substring(0,10)) : 'Video'}</a>
