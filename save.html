@@ -42,6 +42,18 @@
             const urlInput = $('#tweetUrl').val().trim();
             if (!urlInput) { alert("URLを入力してください"); return; }
 
+            let cleanUrl = urlInput;
+            try {
+                const urlObj = new URL(urlInput);
+                // twitter.com を x.com に統一
+                if (urlObj.hostname === 'twitter.com') urlObj.hostname = 'x.com';
+                // ? 以降の余計な文字（追跡パラメータ）を削除
+                cleanUrl = urlObj.origin + urlObj.pathname;
+            } catch (e) {
+                alert("有効なURLを入力してください");
+                return;
+            }
+
             $('#extractBtn').prop('disabled', true).text("Extracting...");
             $('#results').html('<p style="margin-top:20px;">Roding...</p>');
 
