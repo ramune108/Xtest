@@ -65,7 +65,7 @@
                         <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
                         <div class="tile-controls">
                             <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
-                            <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
+                            <a href="index.html?v=${v.id}" class="name-badge">${v.title ? escapeHTML(v.title.substring(0,10)) : 'Video'}</a>
                             <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
                         </div>
                     </div>
@@ -74,6 +74,20 @@
             } catch (e) {
                 $('#videoGrid').html('<p style="column-span:all; text-align:center;">Search Error.</p>');
             }
+        }
+
+        // HTMLエスケープ関数（XSS対策）
+        function escapeHTML(str) {
+            if (!str) return "";
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
         }
 
         async function vote(id, type) {
