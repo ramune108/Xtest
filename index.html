@@ -53,16 +53,29 @@
             const { data } = await query.limit(50);
             if (!data) return;
 
-            const gridHtml = data.map(v => `
-                <div class="listn">
-                    <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
-                    <div class="tile-controls">
-                        <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
-                        <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,12) : 'Video'}</a>
-                        <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
-                    </div>
+            const gridHtml = data.map((v, index) => `
+            <div class="listn">
+                <!-- 1. 左上の順位表示 -->
+                <div class="rank-badge">No.${index + 1}</div>
+        
+                <!-- 2. 右上のXマーク (元ツイートへ) -->
+                <a href="${v.tweet_url}" target="_blank" class="x-link-top">
+                    <i class="fab fa-x-twitter"></i>
+                </a>
+        
+                <!-- 画像クリックで動画再生 -->
+                <a href="${v.video_url}" target="_blank" rel="noreferrer">
+                    <img src="${v.thumbnail_url}">
+                </a>
+        
+                <!-- 下部のコントロールバー -->
+                <div class="tile-controls">
+                    <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
+                    <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
+                    <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
                 </div>
-            `).join('');
+            </div>
+        `).join('');
             $('#videoGrid').html(gridHtml);
         }
 
