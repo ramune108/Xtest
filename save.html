@@ -14,17 +14,18 @@
 <body>
 
     <header class="site-header">
-        <a href="index.html">Twitter Video Tools</a>
-    </header>
+    <a href="index.html">Twitter Video Tools</a>
+</header>
 
-    <main class="input-container">
-        <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Save Twitter Video</p>
-        <input type="text" id="tweetUrl" class="text-input" placeholder="https://x.com/user/status/...">
-        <button id="extractBtn" class="primary-btn" onclick="extractVideo()">
-            <i class="fas fa-file-download"></i> Extract Video
-        </button>
-        <<div id="results" class="video-grid"></div>
-    </main>
+<main class="input-container">
+    <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Save Twitter Video</p>
+    <!-- class="text-input" がCSSで定義されているのでここを修正 -->
+    <input type="text" id="tweetUrl" class="text-input" placeholder="Paste Tweet URL here...">
+    <button id="extractBtn" class="primary-btn" onclick="extractVideo()">
+        <i class="fas fa-file-download"></i> Extract Video
+    </button>
+    <div id="results"></div>
+</main>
 
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
