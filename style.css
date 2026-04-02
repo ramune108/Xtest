@@ -1,156 +1,169 @@
-/* --- 全体設定 --- */
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8f9fa; margin: 0; padding-bottom: 80px; width: 100%; overflow-x: hidden; }
-* { box-sizing: border-box; }
+/* --- ベースリセット (a.css より) --- */
+*, *::before, *::after { box-sizing: border-box; }
+body, h1, h2, h3, h4, p, ul, ol, figure, blockquote, dl, dd { margin: 0; }
+body {
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+  background-color: #f8f9fa;
+  padding-bottom: 80px;
+}
+img { max-width: 100%; display: block; }
+input, button, textarea, select { font: inherit; }
+a { text-decoration: none; }
 
 /* ヘッダー */
-.site-header { background-color: #00acee; color: #FFF; padding: 10px; height: 45px; text-align: center; line-height: 25px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-.site-header a { text-decoration: none; color: #FFF; font-weight: bold; font-size: 1.1rem; }
+.site-header {
+  background-color: #00acee;
+  color: #FFF;
+  padding: 10px;
+  height: 45px;
+  text-align: center;
+  line-height: 25px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.site-header a { color: #FFF; font-weight: bold; font-size: 1.1rem; }
 
-/* 期間選択ボタン */
-.sort-options { margin: 15px auto; width: 95%; max-width: 500px; display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 8px; }
-.sort-btn { padding: 8px 5px; color: #fff; border-radius: 4px; text-decoration: none; font-weight: bold; text-align: center; font-size: 12px; opacity: 0.4; }
-.sort-btn.active { opacity: 1; }
+/* --- フォーム要素 (Search/Saveページ用) --- */
+.input-container { padding: 20px; max-width: 600px; margin: 0 auto; text-align: center; }
+.text-input {
+  width: 100%; padding: 10px; margin-bottom: 10px;
+  border: 1px solid #ccc; border-radius: 4px;
+}
+.primary-btn {
+  width: 100%; padding: 10px; background: #00acee; color: #fff;
+  border: none; border-radius: 4px; font-weight: bold; cursor: pointer;
+}
+
+/* フィルタボタン */
+.sort-options, .filter-options {
+  margin: 10px auto; width: 95%; max-width: 600px;
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 5px;
+}
+.sort-btn, .filter-btn {
+  padding: 8px 2px; color: #fff; border-radius: 4px;
+  font-weight: bold; text-align: center; font-size: 12px; opacity: 0.5;
+}
+.sort-btn.active, .filter-btn.active { opacity: 1; }
 .btn-1d { background-color: #28a745; }
 .btn-3d { background-color: #007bff; }
 .btn-all { background-color: #ffc107; }
+.filter-btn { background-color: #666; }
 
-/* --- 一覧用タイルレイアウト --- */
-.video-grid { width: 100%; padding: 5px; column-count: 2; column-gap: 5px; }
-@media (min-width: 768px) { .video-grid { column-count: 4; } }
-.video-grid .listn { break-inside: avoid; margin-bottom: 8px; background: #000; border-radius: 4px; overflow: hidden; position: relative; display: flex; flex-direction: column; width: 100%; }
-.tile-controls { position: absolute; bottom: 5px; left: 0; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 5px; z-index: 10; }
-.icon-btn { background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 5px 8px; font-size: 14px; cursor: pointer; }
-.name-badge { background: #00acee; color: white !important; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-decoration: none; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* --- 【重要】詳細ページ（画像2の完全再現） --- */
-.detail-view { 
-    display: flex; 
-    padding: 10px; 
-    gap: 10px; 
-    max-width: 800px; 
-    margin: 10px auto; 
-    background: #fff; 
-    border: 1px solid #eee;
-    border-radius: 4px;
+/* --- グリッドレイアウト (a.css の #scroll を再現) --- */
+.video-grid {
+  line-height: 0;
+  column-count: 5;
+  column-gap: 2px;
+  padding: 2px;
 }
 
-.detail-left { 
-    flex: 1; 
-    max-width: 45%; /* 左側の画像エリアの幅 */
+/* レスポンシブ・ブレイクポイント (a.css 準拠) */
+@media (max-width: 900px) { .video-grid { column-count: 4; } }
+@media (max-width: 700px) { .video-grid { column-count: 3; } }
+@media (max-width: 500px) { .video-grid { column-count: 2; } }
+@media (max-width: 300px) { .video-grid { column-count: 1; } }
+
+/* タイル要素 (.listn) */
+.listn {
+  break-inside: avoid;
+  margin-bottom: 2px;
+  background: #000;
+  position: relative;
+  overflow: hidden;
 }
 
-.detail-right { 
-    flex: 1.2; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 6px; 
+.listn img {
+  width: 100% !important;
+  height: auto !important;
+  margin-bottom: -40px; /* a.css の重ね合わせロジック */
+  min-height: 100px;
 }
 
-.detail-thumb { 
-    width: 100%; 
-    border-radius: 2px; 
-    display: block;
+/* タイル内コントロール */
+.tile-controls {
+  position: relative;
+  height: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5px;
+  z-index: 10;
 }
 
-/* Watchボタン（画像同様、画像の下に密着） */
-.watch-btn { 
-    background: #333; 
-    color: #fff !important; 
-    text-align: center; 
-    padding: 8px; 
-    border-radius: 2px; 
-    text-decoration: none; 
-    display: block; 
-    margin-top: 4px; 
-    font-weight: bold; 
-    font-size: 14px;
+.icon-btn {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 2px;
+  font-size: 18px;
+  cursor: pointer;
 }
 
-/* 詳細ページの文字（View tweetの上に表示） */
-.tweet-text-content { 
-    font-size: 13px; 
-    color: #333; 
-    line-height: 1.4; 
-    margin-bottom: 5px; 
-    white-space: pre-wrap; 
-    word-break: break-all;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 8px;
+.name-badge {
+  background: rgba(29, 161, 242, 0.9); /* Twitter Blue */
+  color: #fff !important;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: bold;
+  max-width: 50%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* アクションボタン（画像準拠の黒いボタン） */
-.action-btn { 
-    background: #333; 
-    color: #fff !important; 
-    text-decoration: none; 
-    padding: 10px; 
-    border-radius: 4px; 
-    text-align: center; 
-    font-weight: bold; 
-    font-size: 13px; 
-    display: block; 
-    border: none;
-    cursor: pointer;
+/* 特殊バッジ (a.css のエッセンス) */
+.rank-badge {
+  position: absolute; top: 5px; left: 5px;
+  background: rgba(0,0,0,0.5); color: #fff;
+  padding: 2px 6px; border-radius: 2px; font-size: 10px; z-index: 20;
+}
+.x-link-top {
+  position: absolute; top: 5px; right: 5px;
+  background: #000; color: #fff; width: 24px; height: 24px;
+  display: flex; justify-content: center; align-items: center;
+  border-radius: 4px; z-index: 20; border: 1px solid rgba(255,255,255,0.3);
 }
 
-/* 通報ボタン（赤） */
+/* --- 詳細ページ表示 (前の構成を維持しつつ調整) --- */
+.detail-view {
+  display: flex; flex-direction: column;
+  padding: 10px; max-width: 600px; margin: 0 auto; background: #fff;
+}
+@media (min-width: 600px) {
+  .detail-view { flex-direction: row; gap: 15px; }
+}
+.detail-left, .detail-right { flex: 1; }
+.detail-thumb { width: 100%; border-radius: 4px; }
+.watch-btn {
+  display: block; background: #333; color: #fff !important;
+  text-align: center; padding: 10px; margin: 10px 0; font-weight: bold;
+}
+.tweet-text-content {
+  font-size: 14px; padding: 10px; background: #f0f0f0; border-radius: 4px; margin-bottom: 10px;
+}
+.action-btn {
+  display: block; background: #333; color: #fff !important;
+  padding: 10px; text-align: center; border-radius: 4px; margin-bottom: 6px; font-size: 13px;
+}
 .btn-red { background: #dc3545; }
 
-/* 左上の順位バッジ (No.1) */
-.rank-badge {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    background: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: bold;
-    z-index: 15;
-    pointer-events: none; /* クリックを邪魔しない */
-}
-
-/* 右上のXマーク */
-.x-link-top {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 28px;
-    height: 28px;
-    background: #000;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 20;
-    text-decoration: none;
-}
-
-.x-link-top i {
-    color: #fff;
-    font-size: 14px;
-}
-
-/* 2段目のフィルターボタン（人気・リアルタイム・ランダム） */
-.filter-options {
-    margin: 5px auto 20px; width: 95%; max-width: 500px;
-    display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 8px;
-}
-.filter-btn {
-    padding: 8px 5px; background-color: #6c757d; color: #fff; 
-    border-radius: 4px; text-decoration: none; font-weight: bold; 
-    text-align: center; font-size: 12px; opacity: 0.5; transition: 0.2s;
-}
-.filter-btn.active { opacity: 1; background-color: #343a40; } /* 選択時は濃いグレー */
-
-/* タイル内の他の要素と重ならないように調整 */
-.listn {
-    position: relative; /* 必須 */
-}
-
 /* --- 下部ナビ --- */
-.bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: #fff; border-top: 1px solid #eee; display: flex; z-index: 2000; }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #888; font-size: 10px; }
+.bottom-nav {
+  position: fixed; bottom: 0; width: 100%; height: 60px;
+  background: #fff; border-top: 1px solid #eee;
+  display: flex; z-index: 2000;
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: #888; font-size: 10px;
+}
+.nav-item i { font-size: 18px; margin-bottom: 2px; }
 .nav-item.active { color: #00acee; }
