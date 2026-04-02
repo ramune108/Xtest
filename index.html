@@ -50,7 +50,7 @@
             }
         });
 
-        // HTMLエスケープ関数（XSS対策）
+        // --- HTMLエスケープ関数（XSS対策） ---
         function escapeHTML(str) {
             if (!str) return "";
             return str.replace(/[&<>"']/g, function(m) {
