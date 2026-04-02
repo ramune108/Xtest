@@ -50,6 +50,20 @@
             }
         });
 
+        // HTMLエスケープ関数（XSS対策）
+        function escapeHTML(str) {
+            if (!str) return "";
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+        }
+
         // --- 2. 一覧ページの土台（ボタン類）を表示 ---
         function renderListBase() {
             const html = `
@@ -108,7 +122,7 @@
                         <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
                         <div class="tile-controls">
                             <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
-                            <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
+                            <a href="index.html?v=${v.id}" class="name-badge">${v.title ? escapeHTML(v.title.substring(0,10)) : 'Video'}</a>
                             <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
                         </div>
                     </div>
@@ -132,7 +146,7 @@ async function showDetail(id) {
                 <a href="${v.video_url}" target="_blank" class="watch-btn" rel="noreferrer"><i class="fas fa-play"></i> Watch</a>
             </div>
             <div class="detail-right">
-                ${v.title ? `<div class="tweet-text-content">${v.title}</div>` : ''}
+                ${v.title ? `<div class="tweet-text-content">${escapeHTML(v.title)}</div>` : ''}
                 <a href="${v.tweet_url}" target="_blank" class="action-btn">View tweet</a>
                 <a href="search.html?q=${encodeURIComponent(v.title || '')}" class="action-btn">Timeline</a>
                 <a href="javascript:void(0)" class="action-btn" onclick="vote(${v.id}, 'good')">Bookmark</a>
