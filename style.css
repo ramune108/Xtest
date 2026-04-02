@@ -1,144 +1,362 @@
-/* --- ベース設定 --- */
-*, *::before, *::after { box-sizing: border-box; }
-body, h1, h2, h3, h4, p, ul, ol, figure, blockquote, dl, dd { margin: 0; }
+/* --- 1. ベース設定 (a.cssのリセットを反映) --- */
+*, *::before, *::after { 
+  box-sizing: border-box; 
+}
+
+body, h1, h2, h3, h4, p, ul, ol, figure, blockquote, dl, dd { 
+  margin: 0; 
+}
+
 body {
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   background-color: #f8f9fa;
-  padding-bottom: 80px;
+  padding-bottom: 80px; /* 下部ナビ用の余白 */
   overflow-x: hidden;
 }
-img { max-width: 100%; display: block; }
 
-/* ヘッダー */
+img { 
+  max-width: 100%; 
+  display: block; 
+}
+
+a { 
+  text-decoration: none; 
+}
+
+/* --- 2. ヘッダー --- */
 .site-header {
-  background-color: #00acee; color: #FFF; padding: 10px; height: 45px;
-  text-align: center; line-height: 25px; position: sticky; top: 0; z-index: 1000;
+  background-color: #00acee; 
+  color: #FFF; 
+  padding: 10px; 
+  height: 45px;
+  text-align: center; 
+  line-height: 25px; 
+  position: sticky; 
+  top: 0; 
+  z-index: 1000;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-.site-header a { color: #FFF; font-weight: bold; font-size: 1.1rem; text-decoration: none; }
 
-/* --- 【復元】期間選択・フィルタボタン (24h/3d/All 等) --- */
+.site-header a { 
+  color: #FFF; 
+  font-weight: bold; 
+  font-size: 1.1rem; 
+}
+
+/* --- 3. 期間選択・フィルタボタン (24h/3d/All/人気 等) --- */
 .sort-options { 
-  margin: 15px auto; width: 95%; max-width: 500px; 
-  display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 8px; 
+  margin: 15px auto; 
+  width: 95%; 
+  max-width: 500px; 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  grid-gap: 8px; 
 }
+
 .sort-btn { 
-  padding: 8px 5px; color: #fff; border-radius: 4px; 
-  text-decoration: none; font-weight: bold; text-align: center; 
-  font-size: 12px; opacity: 0.4; 
+  padding: 8px 5px; 
+  color: #fff; 
+  border-radius: 4px; 
+  font-weight: bold; 
+  text-align: center; 
+  font-size: 12px; 
+  opacity: 0.4; /* 非アクティブ時は薄く */
+  transition: 0.2s;
 }
-.sort-btn.active { opacity: 1; }
+
+.sort-btn.active { 
+  opacity: 1; 
+}
 
 .btn-1d { background-color: #28a745; }
 .btn-3d { background-color: #007bff; }
 .btn-all { background-color: #ffc107; }
 
 .filter-options {
-  margin: 5px auto 20px; width: 95%; max-width: 500px;
-  display: grid; grid-template-columns: repeat(3, 1fr); grid-gap: 8px;
+  margin: 5px auto 20px; 
+  width: 95%; 
+  max-width: 500px;
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  grid-gap: 8px;
 }
-.filter-btn {
-  padding: 8px 5px; background-color: #6c757d; color: #fff; 
-  border-radius: 4px; text-decoration: none; font-weight: bold; 
-  text-align: center; font-size: 12px; opacity: 0.5; transition: 0.2s;
-}
-.filter-btn.active { opacity: 1; background-color: #343a40; }
 
-/* --- グリッドレイアウト (a.css 準拠) --- */
-.video-grid { line-height: 0; column-count: 5; column-gap: 2px; padding: 2px; }
+.filter-btn {
+  padding: 8px 5px; 
+  background-color: #6c757d; 
+  color: #fff; 
+  border-radius: 4px; 
+  font-weight: bold; 
+  text-align: center; 
+  font-size: 12px; 
+  opacity: 0.5; 
+  transition: 0.2s;
+}
+
+.filter-btn.active { 
+  opacity: 1; 
+  background-color: #343a40; 
+}
+
+/* --- 4. グリッドレイアウト (a.css 準拠のレスポンシブ) --- */
+.video-grid { 
+  line-height: 0; 
+  column-count: 5; /* PC時は5枚並び */
+  column-gap: 2px; 
+  padding: 2px; 
+}
+
+/* 画面幅に合わせたカラム数の自動調整 */
 @media (max-width: 900px) { .video-grid { column-count: 4; } }
 @media (max-width: 700px) { .video-grid { column-count: 3; } }
 @media (max-width: 500px) { .video-grid { column-count: 2; } }
 
-.listn { break-inside: avoid; margin-bottom: 2px; background: #000; position: relative; overflow: hidden; border-radius: 2px; }
-.listn img { width: 100%; height: auto; margin-bottom: -40px; min-height: 100px; }
-
-/* --- タイル内のコントロール --- */
-.tile-controls { 
-  position: relative; height: 40px; 
-  display: flex; justify-content: space-between; align-items: center; 
-  padding: 0 5px; z-index: 10; 
+/* タイル要素 (.listn) */
+.listn { 
+  break-inside: avoid; 
+  margin-bottom: 2px; 
+  background: #000; 
+  position: relative; 
+  overflow: hidden; 
+  border-radius: 2px; 
 }
 
-/* ユーザー名ボタン（縦幅を大きく維持） */
+/* タイル内の画像 (a.css のネガティブマージンを再現) */
+.listn img { 
+  width: 100% !important; 
+  height: auto !important; 
+  margin-bottom: -40px; /* 下のコントロールと重ねる */
+  min-height: 100px; 
+  display: block;
+}
+
+/* --- 5. タイル内の共通バッジ (No.1 / Xリンク) --- */
+
+/* ランキングバッジ (縦が小さくならないようパディングを確保) */
+.rank-badge {
+  position: absolute; 
+  top: 5px; 
+  left: 5px;
+  background: rgba(0, 0, 0, 0.6); 
+  color: #fff;
+  padding: 4px 8px; /* 縦横のバランスを調整 */
+  border-radius: 4px; 
+  font-size: 11px; 
+  font-weight: bold; 
+  z-index: 20;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
+/* 右上のXマークリンク */
+.x-link-top {
+  position: absolute; 
+  top: 5px; 
+  right: 5px;
+  background: #000; 
+  color: #fff; 
+  width: 28px; 
+  height: 28px;
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  border-radius: 4px; 
+  z-index: 20; 
+  border: 1px solid rgba(255,255,255,0.3);
+  text-decoration: none;
+}
+
+.x-link-top i {
+  font-size: 14px;
+}
+
+/* --- 6. タイル内のコントロール (投票ボタン・タイトル) --- */
+
+.tile-controls { 
+  position: relative; 
+  height: 45px; /* コントロールエリアの高さ */
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 0 5px; 
+  z-index: 10; 
+}
+
+/* ユーザー名ボタン (ご要望により縦幅を大きく調整) */
 .name-badge { 
-  background: rgba(29, 161, 242, 0.9); 
+  background: rgba(29, 161, 242, 0.9); /* Twitterブルーに近い透過色 */
   color: #fff !important; 
-  padding: 8px 10px; 
+  padding: 8px 12px; /* 上下8pxでしっかりと高さを出し、左右に12pxの余白 */
   border-radius: 4px; 
   font-size: 11px; 
   font-weight: bold; 
   text-decoration: none; 
-  max-width: 55%; 
+  max-width: 55%; /* タイトルが長すぎても崩れないように制限 */
   white-space: nowrap; 
   overflow: hidden; 
   text-overflow: ellipsis;
   line-height: 1.2;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
+/* 投票ボタン (Good / Bad) */
 .icon-btn { 
-  background: rgba(0, 0, 0, 0.5); color: #fff; border: none; 
-  padding: 6px 10px; border-radius: 2px; font-size: 18px; cursor: pointer; 
+  background: rgba(0, 0, 0, 0.5); 
+  color: #fff; 
+  border: none; 
+  padding: 6px 10px; 
+  border-radius: 4px; 
+  font-size: 18px; 
+  cursor: pointer; 
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ランキングバッジ（縦幅バランス維持） */
-.rank-badge {
-  position: absolute; top: 5px; left: 5px;
-  background: rgba(0, 0, 0, 0.6); color: #fff;
-  padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; z-index: 20;
-  line-height: 1;
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
 }
 
-.x-link-top {
-  position: absolute; top: 5px; right: 5px;
-  background: #000; color: #fff; width: 28px; height: 28px;
-  display: flex; justify-content: center; align-items: center;
-  border-radius: 4px; z-index: 20; border: 1px solid rgba(255,255,255,0.3);
+/* アイコン自体の調整 */
+.icon-btn i {
+  pointer-events: none;
 }
 
-/* --- 詳細ページ（元のサイズ） --- */
-.detail-view {
-  display: flex; flex-direction: column; 
-  padding: 10px; max-width: 600px; margin: 10px auto; background: #fff; border: 1px solid #eee;
+/* --- 7. 詳細ページ (表示サイズを元通りコンパクトに設定) --- */
+.detail-view { 
+  display: flex; 
+  flex-direction: column; 
+  padding: 10px; 
+  max-width: 600px; 
+  margin: 10px auto; 
+  background: #fff; 
+  border: 1px solid #eee; 
+  border-radius: 4px;
 }
-@media (min-width: 600px) { .detail-view { flex-direction: row; gap: 15px; } }
+
+@media (min-width: 600px) { 
+  .detail-view { flex-direction: row; gap: 15px; } 
+}
 
 .detail-left, .detail-right { flex: 1; }
-.detail-thumb { width: 100%; border-radius: 2px; }
+.detail-thumb { width: 100%; border-radius: 2px; display: block; }
 
+/* ウォッチボタン (元のサイズ: padding 8px) */
 .watch-btn {
-  display: block; background: #333; color: #fff !important;
-  text-align: center; padding: 8px; margin: 4px 0;
-  font-weight: bold; font-size: 14px; text-decoration: none; border-radius: 2px;
+  display: block; 
+  background: #333; 
+  color: #fff !important; 
+  text-align: center; 
+  padding: 8px; 
+  margin: 4px 0; 
+  font-weight: bold; 
+  font-size: 14px; 
+  text-decoration: none; 
+  border-radius: 2px;
 }
 
 .tweet-text-content {
-  font-size: 13px; color: #333; line-height: 1.4; margin-bottom: 5px;
-  white-space: pre-wrap; word-break: break-all; border-bottom: 1px solid #eee; padding-bottom: 8px;
+  font-size: 13px; 
+  color: #333; 
+  line-height: 1.4; 
+  margin-bottom: 5px; 
+  white-space: pre-wrap; 
+  word-break: break-all; 
+  border-bottom: 1px solid #eee; 
+  padding-bottom: 8px;
 }
 
+/* アクションボタン (元のサイズ: padding 10px) */
 .action-btn {
-  display: block; background: #333; color: #fff !important;
-  text-decoration: none; padding: 10px; border-radius: 4px; 
-  text-align: center; font-weight: bold; font-size: 13px; margin-bottom: 6px;
+  display: block; 
+  background: #333; 
+  color: #fff !important; 
+  text-decoration: none; 
+  padding: 10px; 
+  border-radius: 4px; 
+  text-align: center; 
+  font-weight: bold; 
+  font-size: 13px; 
+  margin-bottom: 6px;
 }
 .btn-red { background: #dc3545; }
 
-/* --- 共通コンテナ --- */
+/* --- 8. 入力フォーム & 保存(Save)ページの結果表示 --- */
 .input-container { padding: 20px; max-width: 500px; margin: 0 auto; text-align: center; }
-.text-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-.primary-btn { width: 100%; padding: 10px; background: #00acee; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+.text-input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none; }
+.primary-btn { width: 100%; padding: 12px; background: #00acee; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-/* 下部ナビ */
+/* 抽出結果プレビュー (中央揃え & 1ページに収める設定) */
+.preview-box {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 要素を中央に */
+    text-align: center;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.preview-video {
+    width: 100%;
+    max-width: 400px;
+    max-height: 45vh; /* 画面の約半分に高さを制限してボタンを1画面に収める */
+    background: #000;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+/* ダウンロードボタンの修正CSS */
+.download-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px;
+    background-color: #28a745; /* 目立つ緑色 */
+    color: white !important;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* --- 9. 下部ナビゲーション --- */
 .bottom-nav {
-  position: fixed; bottom: 0; width: 100%; height: 60px;
-  background: #fff; border-top: 1px solid #eee; display: flex; z-index: 2000;
+  position: fixed; 
+  bottom: 0; 
+  width: 100%; 
+  height: 60px; 
+  background: #fff; 
+  border-top: 1px solid #eee; 
+  display: flex; 
+  z-index: 2000;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
+
 .nav-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: #888; font-size: 10px; text-decoration: none;
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  color: #888; 
+  font-size: 10px; 
+  text-decoration: none;
 }
-.nav-item i { font-size: 18px; margin-bottom: 2px; }
-.nav-item.active { color: #00acee; }
+
+.nav-item i { 
+  font-size: 18px; 
+  margin-bottom: 2px; 
+}
+
+.nav-item.active { 
+  color: #00acee; 
+  font-weight: bold;
+}
