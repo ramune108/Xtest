@@ -118,28 +118,75 @@
         }
 
         // --- 4. 詳細ページの表示 ---
-        async function showDetail(id) {
-            const { data: v } = await _supabase.from('videos').select('*').eq('id', id).single();
-            if (!v) { $('#contentArea').html('<p>Video not found.</p>'); return; }
+async function showDetail(id) {
+    const { data: v } = await _supabase.from('videos').select('*').eq('id', id).single();
+    if (!v) { $('#contentArea').html('<p>Video not found.</p>'); return; }
 
-            const detailHtml = `
-                <div class="detail-view">
-                    <div class="detail-left">
-                        <img src="${v.thumbnail_url}" class="detail-thumb">
-                        <a href="${v.video_url}" target="_blank" class="watch-btn" rel="noreferrer"><i class="fas fa-play"></i> Watch</a>
-                    </div>
-                    <div class="detail-right">
-                        ${v.title ? `<div class="tweet-text-content">${v.title}</div>` : ''}
-                        <a href="${v.tweet_url}" target="_blank" class="action-btn">View tweet</a>
-                        <a href="search.html?q=${encodeURIComponent(v.title || '')}" class="action-btn">Timeline</a>
-                        <a href="javascript:void(0)" class="action-btn" onclick="vote(${v.id}, 'good')">Bookmark</a>
-                        <a href="index.html" class="action-btn">Watch more</a>
-                        <a href="javascript:void(0)" class="action-btn btn-red" onclick="alert('Reported')"><i class="fas fa-flag"></i> Report abuse</a>
-                    </div>
-                </div>
-            `;
-            $('#contentArea').html(detailHtml);
+    // URLからユーザー名を抜き出す (例: https://x.com/username/status/... の 'username' 部分)
+    const username = v.tweet_url.split('/')[3] || "User";
+
+    const detailHtml = `
+        <div class="detail-view">
+            <div class="detail-left">
+                <img src="${v.thumbnail_url}" class="detail-thumb">
+                <a href="${v.video_url}" target="_blank" class="watch-btn" rel="noreferrer"><i class="fas fa-play"></i> Watch</a>
+            </div>
+            <div class="detail-right">
+                ${v.title ? `<div class="tweet-text-content">${v.title}</div>` : ''}
+                <a href="${v.tweet_url}" target="_blank" class="action-btn">View tweet</a>
+                <a href="search.html?q=${encodeURIComponent(v.title || '')}" class="action-btn">Timeline</a>
+                <a href="javascript:void(0)" class="action-btn" onclick="vote(${v.id}, 'good')">Bookmark</a>
+                <a href="index.html" class="action-btn">Watch more</a>
+                <a href="javascript:void(0)" class="action-btn btn-red" onclick="alert('Reported')"><i class="fas fa-flag"></i> Report abuse</a>
+            </div>
+        </div>
+        <!-- 関連動画を表示するエリアを追記 -->
+        <div id="relatedSection">
+            <h3 class="related-title">Other videos by @${username}</h3>
+            <div id="relatedGrid" class="video-grid">
+                <p style="column-span:all; text-align:center; padding:20px;">Loading related videos...</p>
+            </div>
+        </div>
+    `;
+    $('#contentArea').html(detailHtml);
+
+    // 同じ投稿者の他の動画を探して表示する
+    fetchRelatedVideos(username, v.id);
+}
+
+// --- 関連動画を取得する補助関数 ---
+async function fetchRelatedVideos(username, currentId) {
+    try {
+        const { data } = await _supabase
+            .from('videos')
+            .select('*')
+            .ilike('tweet_url', `%/${username}/%`) // URLにユーザー名が含まれるものを検索
+            .neq('id', currentId) // 今表示している動画は除く
+            .order('created_at', { ascending: false })
+            .limit(10); // 最大10件
+
+        if (!data || data.length === 0) {
+            $('#relatedSection').hide(); // 他に動画がない場合はセクションを隠す
+            return;
         }
+
+        const gridHtml = data.map((v, index) => `
+            <div class="listn">
+                <a href="${v.tweet_url}" target="_blank" class="x-link-top"><i class="fab fa-x-twitter"></i></a>
+                <a href="index.html?v=${v.id}"><img src="${v.thumbnail_url}"></a>
+                <div class="tile-controls">
+                    <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
+                    <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
+                    <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
+                </div>
+            </div>
+        `).join('');
+        $('#relatedGrid').html(gridHtml);
+    } catch (e) {
+        console.error("Related error:", e);
+        $('#relatedSection').hide();
+    }
+}
 
         // --- 5. 投票処理 ---
         async function vote(id, type) {
