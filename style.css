@@ -100,27 +100,28 @@ a {
   background-color: #343a40; 
 }
 
-/* --- 4. グリッドレイアウト (a.css 準拠のレスポンシブ) --- */
+/* --- 4. グリッドレイアウト (左から右へ並ぶ設定に修正) --- */
 .video-grid { 
-  line-height: 0; 
-  column-count: 5; /* PC時は5枚並び */
-  column-gap: 2px; 
+  display: grid; /* column-count から変更 */
+  grid-template-columns: repeat(5, 1fr); /* 5列並び */
+  gap: 4px 2px; /* 縦の隙間を4px、横の隙間を2pxに設定 */
   padding: 2px; 
+  align-items: start; /* 画像の高さが違っても上揃えにする */
 }
 
-/* 画面幅に合わせたカラム数の自動調整 */
-@media (max-width: 900px) { .video-grid { column-count: 4; } }
-@media (max-width: 700px) { .video-grid { column-count: 3; } }
-@media (max-width: 500px) { .video-grid { column-count: 2; } }
+/* 画面幅に合わせた列数(カラム数)の調整 */
+@media (max-width: 1000px) { .video-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 750px) { .video-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 500px) { .video-grid { grid-template-columns: repeat(2, 1fr); } }
 
-/* タイル要素 (.listn) */
+/* タイル要素 (.listn) の修正 */
 .listn { 
-  break-inside: avoid; 
-  margin-bottom: 2px; 
+  /* column-count用の break-inside: avoid は不要なので削除してOK */
   background: #000; 
   position: relative; 
   overflow: hidden; 
   border-radius: 2px; 
+  width: 100%; /* グリッドの幅に合わせる */
 }
 
 /* タイル内の画像 (a.css のネガティブマージンを再現) */
