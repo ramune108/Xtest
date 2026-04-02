@@ -190,9 +190,31 @@ async function fetchRelatedVideos(username, currentId) {
 
         // --- 5. 投票処理 ---
         async function vote(id, type) {
+            // 1. ブラウザの記憶（LocalStorage）から「投票済みIDリスト」を取り出す
+            const votedList = JSON.parse(localStorage.getItem('voted_video_ids') || '[]');
+
+            // 2. この動画IDがすでにリストにあれば、処理を中断する
+            if (votedList.includes(id)) {
+                alert("この動画には既に投票済みです。");
+                return;
+            }
+
+            // 3. 投票処理を実行
             const col = type === 'good' ? 'good_count' : 'bad_count';
             const { error } = await _supabase.rpc('increment_vote', { row_id: id, col_name: col });
-            if (!error) alert("Voted!");
+
+            if (!error) {
+                // 4. 成功したら、リストにこの動画IDを追加してブラウザに保存する
+                votedList.push(id);
+                localStorage.setItem('voted_video_ids', JSON.stringify(votedList));
+                
+                alert("投票ありがとうございます！");
+                
+                // 5. 画面を更新して最新のカウントを表示する（任意）
+                location.reload(); 
+            } else {
+                alert("投票に失敗しました。再度お試しください。");
+            }
         }
     </script>
 </body>
