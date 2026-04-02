@@ -119,7 +119,7 @@
                     <div class="listn">
                         <div class="rank-badge">No.${index + 1}</div>
                         <a href="${v.tweet_url}" target="_blank" class="x-link-top"><i class="fab fa-x-twitter"></i></a>
-                        <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${v.thumbnail_url}"></a>
+                        <a href="${v.video_url}" target="_blank" rel="noreferrer"><<img src="${encodeURI(v.thumbnail_url)}">
                         <div class="tile-controls">
                             <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
                             <a href="index.html?v=${v.id}" class="name-badge">${v.title ? escapeHTML(v.title.substring(0,10)) : 'Video'}</a>
@@ -142,7 +142,7 @@ async function showDetail(id) {
     const detailHtml = `
         <div class="detail-view">
             <div class="detail-left">
-                <img src="${v.thumbnail_url}" class="detail-thumb">
+                <img src="${encodeURI(v.thumbnail_url)}" class="detail-thumb">
                 <a href="${v.video_url}" target="_blank" class="watch-btn" rel="noreferrer"><i class="fas fa-play"></i> Watch</a>
             </div>
             <div class="detail-right">
@@ -187,7 +187,7 @@ async function fetchRelatedVideos(username, currentId) {
         const gridHtml = data.map((v, index) => `
             <div class="listn">
                 <a href="${v.tweet_url}" target="_blank" class="x-link-top"><i class="fab fa-x-twitter"></i></a>
-                <a href="index.html?v=${v.id}"><img src="${v.thumbnail_url}"></a>
+                <a href="index.html?v=${v.id}"><img src="${encodeURI(v.thumbnail_url)}">
                 <div class="tile-controls">
                     <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
                     <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
