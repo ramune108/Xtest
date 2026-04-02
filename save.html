@@ -95,6 +95,20 @@
             }
         }
 
+        // HTMLエスケープ関数（XSS対策）
+        function escapeHTML(str) {
+            if (!str) return "";
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+        }
+        
         function onlyDownload(vUrl) {
             const a = document.createElement('a');
             a.href = vUrl;
