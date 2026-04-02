@@ -360,3 +360,22 @@ a {
   color: #00acee; 
   font-weight: bold;
 }
+
+/* 関連動画セクションの見出し */
+.related-title {
+    width: 95%;
+    max-width: 600px;
+    margin: 20px auto 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #555;
+    padding-left: 10px;
+    border-left: 4px solid #00acee;
+}
+
+/* 詳細ページ内での関連グリッドの余白調整 */
+#relatedSection {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
