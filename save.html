@@ -6,7 +6,8 @@
     <meta name="referrer" content="no-referrer">
     <title>Save - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <!-- 最新の FontAwesome v6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -18,7 +19,7 @@
 
     <main class="input-container">
         <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Save Twitter Video</p>
-        <input type="text" id="tweetUrl" class="text-input" placeholder="Paste Tweet URL here...">
+        <input type="text" id="tweetUrl" class="text-input" placeholder="https://x.com/user/status/...">
         <button id="extractBtn" class="primary-btn" onclick="extractVideo()">
             <i class="fas fa-file-download"></i> Extract Video
         </button>
@@ -40,12 +41,10 @@
             const urlInput = $('#tweetUrl').val().trim();
             if (!urlInput) { alert("URLを入力してください"); return; }
 
-            // ボタンを無効化
             $('#extractBtn').prop('disabled', true).text("Extracting...");
             $('#results').html('<p style="margin-top:20px;">Analyzing with yt-dlp...</p>');
 
             try {
-                // 1. Python API で動画を抽出
                 const response = await fetch("/api", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -54,7 +53,7 @@
                 const data = await response.json();
 
                 if (data.status === "success") {
-                    // 【重要】成功した瞬間にデータベースへ自動登録（カウントアップ）
+                    // 抽出成功時に自動でランキング登録
                     await _supabase.rpc('increment_save_count', {
                         target_tweet_url: urlInput, 
                         target_video_url: data.url, 
@@ -62,8 +61,6 @@
                         target_title: data.title
                     });
 
-                    // 2. プレビューを表示
-                    // controlsList="nodownload" でブラウザ標準のダウンロードメニューを隠します
                     $('#results').html(`
                         <div class="preview-box">
                             <p style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:10px;">
@@ -79,15 +76,12 @@
                     $('#results').html(`<p style="color:red; margin-top:20px;">Error: ${data.message}</p>`);
                 }
             } catch (e) {
-                console.error(e);
                 $('#results').html('<p style="color:red; margin-top:20px;">Connection Error.</p>');
             } finally {
-                // ボタンを元に戻す
                 $('#extractBtn').prop('disabled', false).html('<i class="fas fa-file-download"></i> Extract Video');
             }
         }
 
-        // ダウンロードボタンの処理：動画を別タブで開くだけ
         function onlyDownload(vUrl) {
             const a = document.createElement('a');
             a.href = vUrl;
