@@ -6,58 +6,45 @@
     <meta name="referrer" content="no-referrer">
     <title>Save - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
-    <!-- 最新の FontAwesome v6 -->
+    <!-- FontAwesome v6 & jQuery & Supabase -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 共通JSを読み込む -->
+    <script src="main.js"></script>
 </head>
 <body>
 
     <header class="site-header">
-    <a href="index.html">Twitter Video Tools</a>
-</header>
+        <a href="index.html">Twitter Video Tools</a>
+    </header>
 
-<main class="input-container">
-    <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Download Twitter Video URL</p>
-    <!-- class="text-input" がCSSで定義されているのでここを修正 -->
-    <input type="text" id="tweetUrl" class="text-input" placeholder="Paste Tweet URL here...">
-    <button id="extractBtn" class="primary-btn" onclick="extractVideo()">
-        <i class="fas fa-file-download"></i> Extract Video URL
-    </button>
-    <div id="results"></div>
-</main>
+    <main class="input-container">
+        <p style="font-weight: bold; color: #555; margin-bottom: 15px;">Save Twitter Video</p>
+        <input type="text" id="tweetUrl" class="text-input" placeholder="Paste X URL here...">
+        <button id="extractBtn" class="primary-btn" onclick="extractVideo()">
+            <i class="fas fa-file-download"></i> Extract Video
+        </button>
+        <div id="results"></div>
+    </main>
 
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item"><i class="fas fa-play-circle nav-icon"></i>Watch</a>
-        <a href="search.html" class="nav-item"><i class="fas fa-search nav-icon"></i>Search</a>
-        <a href="save.html" class="nav-item active"><i class="fas fa-plus-circle nav-icon"></i>Save</a>
+        <a href="index.html" class="nav-item"><i class="fas fa-trophy" style="font-size:18px;"></i>Ranking</a>
+        <a href="search.html" class="nav-item"><i class="fas fa-search" style="font-size:18px;"></i>Search</a>
+        <a href="save.html" class="nav-item active"><i class="fas fa-plus-circle" style="font-size:18px;"></i>Save</a>
     </nav>
 
     <script>
-        const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         async function extractVideo() {
             const urlInput = $('#tweetUrl').val().trim();
             if (!urlInput) { alert("URLを入力してください"); return; }
 
-            let cleanUrl = urlInput;
-            try {
-                const urlObj = new URL(urlInput);
-                // twitter.com を x.com に統一
-                if (urlObj.hostname === 'twitter.com') urlObj.hostname = 'x.com';
-                // ? 以降の余計な文字（追跡パラメータ）を削除
-                cleanUrl = urlObj.origin + urlObj.pathname;
-            } catch (e) {
-                alert("有効なURLを入力してください");
-                return;
-            }
-
+            // UIを抽出中モードへ
             $('#extractBtn').prop('disabled', true).text("Extracting...");
-            $('#results').html('<p style="margin-top:20px;">Roding...</p>');
+            $('#results').html('<p style="margin-top:20px;">Analyzing with yt-dlp...</p>');
 
             try {
+                // 1. Python API (/api/index.py) へ抽出リクエスト
                 const response = await fetch("/api", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -66,7 +53,7 @@
                 const data = await response.json();
 
                 if (data.status === "success") {
-                    // 抽出成功時に自動でランキング登録
+                    // 2. 自動でSupabaseに保存（ランキングカウントアップ）
                     await _supabase.rpc('increment_save_count', {
                         target_tweet_url: urlInput, 
                         target_video_url: data.url, 
@@ -74,15 +61,17 @@
                         target_title: data.title
                     });
 
+                    // 3. 動画を表示（watch.html へのリンク付き）
                     $('#results').html(`
                         <div class="preview-box">
                             <p style="font-size:0.8rem; color:#28a745; font-weight:bold; margin-bottom:10px;">
                                 <i class="fas fa-check-circle"></i> Success! Added to Ranking.
                             </p>
-                            <video src="${data.url}" controls controlsList="nodownload" oncontextmenu="return false;" class="preview-video" poster="${data.thumbnail}"></video>
-                            <button class="download-btn" onclick="onlyDownload('${data.url}')">
-                                <i class="fas fa-download"></i> Download Video
-                            </button>
+                            <img src="${data.thumbnail}" class="preview-video">
+                            <!-- 動画ページ(watch.html)へ遷移させる -->
+                            <a href="watch.html?url=${encodeURIComponent(data.url)}" target="_blank" class="download-btn">
+                                <i class="fas fa-play"></i> Watch / Download
+                            </a>
                         </div>
                     `);
                 } else {
@@ -94,29 +83,6 @@
                 $('#extractBtn').prop('disabled', false).html('<i class="fas fa-file-download"></i> Extract Video');
             }
         }
-
-        // HTMLエスケープ関数（XSS対策）
-        function escapeHTML(str) {
-            if (!str) return "";
-            return str.replace(/[&<>"']/g, function(m) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                }[m];
-            });
-        }
-        
-        function onlyDownload(vUrl) {
-            const a = document.createElement('a');
-            a.href = vUrl;
-            a.rel = "noreferrer";
-            a.target = "_blank";
-            a.click();
-        }
     </script>
 </body>
 </html>
-
