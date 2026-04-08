@@ -6,115 +6,79 @@
     <meta name="referrer" content="no-referrer">
     <title>Search - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
+    <!-- 最新 FontAwesome v6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 共通JS -->
+    <script src="main.js"></script>
 </head>
 <body>
 
     <header class="site-header">
-    <a href="index.html">Twitter Video Tools</a>
-</header>
+        <a href="index.html">Twitter Video Tools</a>
+    </header>
 
-<main class="input-container">
-    <!-- input-containerとtext-inputクラスを適用 -->
-    <input type="text" id="searchQuery" class="text-input" placeholder="Search keywords...">
-    <button class="primary-btn" onclick="executeSearch()">
-        <i class="fas fa-search"></i> Search
-    </button>
-</main>
+    <main class="input-container">
+        <!-- 検索フォーム -->
+        <input type="text" id="searchQuery" class="text-input" placeholder="Search keywords..." onkeypress="if(event.key==='Enter')executeSearch()">
+        <button class="primary-btn" onclick="executeSearch()">
+            <i class="fas fa-search"></i> Search
+        </button>
+    </main>
 
-<!-- ランキング結果を入れる場所 -->
-<div id="videoGrid" class="video-grid"></div>
+    <!-- 検索結果表示エリア -->
+    <div id="videoGrid" class="video-grid"></div>
 
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item"><i class="fas fa-play-circle nav-icon"></i>Watch</a>
+        <a href="index.html" class="nav-item"><i class="fas fa-trophy nav-icon"></i>Ranking</a>
         <a href="search.html" class="nav-item active"><i class="fas fa-search nav-icon"></i>Search</a>
         <a href="save.html" class="nav-item"><i class="fas fa-plus-circle nav-icon"></i>Save</a>
     </nav>
 
     <script>
-        const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         async function executeSearch() {
             const query = $('#searchQuery').val().trim();
             if(!query) return;
             
-            $('#videoGrid').html('<p style="column-span:all; text-align:center; padding:20px;">Searching...</p>');
+            const grid = $('#videoGrid');
+            grid.html('<p style="column-span:all; text-align:center; padding:20px;">Searching...</p>');
 
             try {
-                const { data } = await _supabase
+                // Supabaseであいまい検索
+                const { data, error } = await _supabase
                     .from('videos')
                     .select('*')
                     .ilike('title', `%${query}%`)
                     .order('save_count', { ascending: false });
                 
                 if(!data || data.length === 0) {
-                    $('#videoGrid').html('<p style="column-span:all; text-align:center; padding:20px;">No videos found.</p>');
+                    grid.html('<p style="column-span:all; text-align:center; padding:20px;">No videos found.</p>');
                     return;
                 }
 
+                // タイル生成
                 const gridHtml = data.map((v, index) => `
                     <div class="listn">
                         <div class="rank-badge">No.${index + 1}</div>
                         <a href="${v.tweet_url}" target="_blank" class="x-link-top">
                             <i class="fa-brands fa-x-twitter" style="color:white !important;"></i>
                         </a>
-                        <a href="${v.video_url}" target="_blank" rel="noreferrer"><img src="${encodeURI(v.thumbnail_url)}"></a>
+                        <!-- watch.html へ飛ぶように修正 -->
+                        <a href="watch.html?url=${encodeURIComponent(v.video_url)}" target="_blank" rel="noreferrer">
+                            <img src="${v.thumbnail_url}">
+                        </a>
                         <div class="tile-controls">
-                            <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
+                            <button class="icon-btn" onclick="handleVote(${v.id}, 'good', this)"><i class="fas fa-thumbs-up"></i></button>
                             <a href="index.html?v=${v.id}" class="name-badge">${v.title ? escapeHTML(v.title.substring(0,10)) : 'Video'}</a>
-                            <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
+                            <button class="icon-btn" onclick="handleVote(${v.id}, 'bad', this)"><i class="fas fa-thumbs-down"></i></button>
                         </div>
                     </div>
                 `).join('');
-                $('#videoGrid').html(gridHtml);
+                grid.html(gridHtml);
             } catch (e) {
-                $('#videoGrid').html('<p style="column-span:all; text-align:center;">Search Error.</p>');
-            }
-        }
-
-        // HTMLエスケープ関数（XSS対策）
-        function escapeHTML(str) {
-            if (!str) return "";
-            return str.replace(/[&<>"']/g, function(m) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                }[m];
-            });
-        }
-
-        async function vote(id, type) {
-            // 1. ブラウザの記憶（LocalStorage）から「投票済みIDリスト」を取り出す
-            const votedList = JSON.parse(localStorage.getItem('voted_video_ids') || '[]');
-
-            // 2. この動画IDがすでにリストにあれば、処理を中断する
-            if (votedList.includes(id)) {
-                alert("この動画には既に投票済みです。");
-                return;
-            }
-
-            // 3. 投票処理を実行
-            const col = type === 'good' ? 'good_count' : 'bad_count';
-            const { error } = await _supabase.rpc('increment_vote', { row_id: id, col_name: col });
-
-            if (!error) {
-                // 4. 成功したら、リストにこの動画IDを追加してブラウザに保存する
-                votedList.push(id);
-                localStorage.setItem('voted_video_ids', JSON.stringify(votedList));
-                
-                alert("投票ありがとうございます！");
-                
-                // 5. 画面を更新して最新のカウントを表示する（任意）
-                location.reload(); 
-            } else {
-                alert("投票に失敗しました。再度お試しください。");
+                grid.html('<p style="column-span:all; text-align:center;">Search Error.</p>');
+                console.error(e);
             }
         }
     </script>
