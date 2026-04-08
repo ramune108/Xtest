@@ -28,9 +28,9 @@ body { font-family: -apple-system, sans-serif; background-color: #f8f9fa; margin
 .name-badge { font-size: 10px; font-weight: bold; color: #00acee; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 50px; }
 
 /* --- 5. 入力・詳細フォーム --- */
-.input-container { padding: 20px; background: #fff; text-align: center; }
-.text-input { width: 100%; max-width: 500px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
-.primary-btn { width: 100%; max-width: 500px; padding: 12px; background: #00acee; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.input-container { padding: 20px; background: #fff; text-align: center; width: 100%; max-width: 500px; margin: 0 auto; }
+.text-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 12px; display: block; font-size: 1rem; outline: none; }
+.primary-btn { width: 100%; padding: 14px; background: #00acee; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; display: block; }
 
 /* 詳細ページ用 */
 .detail-view { display: flex; flex-direction: column; padding: 15px; gap: 15px; max-width: 600px; margin: 0 auto; background: #fff; }
