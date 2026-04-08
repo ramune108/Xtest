@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Video</title>
+    <style>
+        body { margin: 0; background: #000; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        video { width: 100%; max-width: 600px; display: block; }
+    </style>
+</head>
+<body>
+    <video id="vid" controls autoplay playsinline></video>
+    <script>
+        // URLのパラメータから動画URLを取得して再生
+        const params = new URLSearchParams(window.location.search);
+        const url = params.get('url');
+        if(url) {
+            document.getElementById('vid').src = decodeURIComponent(url);
+        }
+    </script>
+</body>
+</html>
