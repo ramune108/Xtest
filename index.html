@@ -4,231 +4,90 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
-    <title>Twitter Video Tools</title>
+    <title>Ranking - Twitter Video Tools</title>
     <link rel="stylesheet" href="style.css">
-    <!-- FontAwesome & jQuery & Supabase -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- ライブラリと共通JSの読み込み -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="main.js"></script>
 </head>
 <body>
-
-    <header class="site-header">
-        <a href="index.html">Twitter Video Tools</a>
-    </header>
+    <header class="site-header"><a href="index.html">Twitter Video Tools</a></header>
 
     <div id="contentArea">
-        <!-- JavaScriptで一覧または詳細がここに挿入されます -->
+        <div class="sort-options">
+            <a id="btn-1d" class="sort-btn btn-1d" href="javascript:void(0)" onclick="loadRanking('1d')">24h</a>
+            <a id="btn-3d" class="sort-btn btn-3d" href="javascript:void(0)" onclick="loadRanking('3d')">3d</a>
+            <a id="btn-all" class="sort-btn btn-all active" href="javascript:void(0)" onclick="loadRanking('all')">All</a>
+        </div>
+        <div id="videoGrid" class="video-grid"></div>
     </div>
 
-    <!-- 下部ナビゲーション -->
     <nav class="bottom-nav">
-        <a href="index.html" class="nav-item active"><i class="fas fa-play-circle" style="font-size:18px;"></i>Watch</a>
+        <a href="index.html" class="nav-item active"><i class="fas fa-trophy" style="font-size:18px;"></i>Ranking</a>
         <a href="search.html" class="nav-item"><i class="fas fa-search" style="font-size:18px;"></i>Search</a>
         <a href="save.html" class="nav-item"><i class="fas fa-plus-circle" style="font-size:18px;"></i>Save</a>
     </nav>
 
     <script>
-        // --- 1. Supabase設定 ---
-        const SUPABASE_URL = 'https://jziiuyezguukewkfpudw.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_KWKB8rprJAhTqQz9PoNscg_NowmknXH';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // 状態管理
-        let currentPeriod = 'all';
-        let currentMode = 'popular';
-
+        // ページ読み込み時に初期化
         $(document).ready(function() {
             const params = new URLSearchParams(window.location.search);
-            const videoId = params.get('v');
-
-            if (videoId) {
-                showDetail(videoId); // 詳細ページを表示
-            } else {
-                renderListBase(); // 一覧ページの土台を表示
-                updateRanking(); // データを取得
-            }
+            const vID = params.get('v');
+            if (vID) { showDetail(vID); } else { loadRanking('all'); }
         });
 
-        // --- HTMLエスケープ関数（XSS対策） ---
-        function escapeHTML(str) {
-            if (!str) return "";
-            return str.replace(/[&<>"']/g, function(m) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                }[m];
-            });
-        }
-
-        // --- 2. 一覧ページの土台（ボタン類）を表示 ---
-        function renderListBase() {
-            const html = `
-                <div class="sort-options">
-                    <a id="btn-1d" class="sort-btn btn-1d" href="javascript:void(0)" onclick="changePeriod('1d')">24h</a>
-                    <a id="btn-3d" class="sort-btn btn-3d" href="javascript:void(0)" onclick="changePeriod('3d')">3d</a>
-                    <a id="btn-all" class="sort-btn btn-all active" href="javascript:void(0)" onclick="changePeriod('all')">All</a>
-                </div>
-                <div class="filter-options">
-                    <a id="mode-popular" class="filter-btn active" href="javascript:void(0)" onclick="changeMode('popular')">人気</a>
-                    <a id="mode-realtime" class="filter-btn" href="javascript:void(0)" onclick="changeMode('realtime')">リアルタイム</a>
-                    <a id="mode-random" class="filter-btn" href="javascript:void(0)" onclick="changeMode('random')">ランダム</a>
-                </div>
-                <div id="videoGrid" class="video-grid"></div>
-            `;
-            $('#contentArea').html(html);
-        }
-
-        // --- 3. データの取得と表示 ---
-        function changePeriod(p) { currentPeriod = p; if(currentMode === 'random') currentMode = 'popular'; updateRanking(); }
-        function changeMode(m) { currentMode = m; updateRanking(); }
-
-        async function updateRanking() {
-            // ボタンの見た目更新
-            $('.sort-btn').removeClass('active'); $('#btn-' + currentPeriod).addClass('active');
-            $('.filter-btn').removeClass('active'); $('#mode-' + currentMode).addClass('active');
+        // --- ランキング表示処理 ---
+        async function loadRanking(period) {
+            $('.sort-btn').removeClass('active');
+            $('#btn-' + period).addClass('active');
 
             const grid = $('#videoGrid');
             grid.html('<p style="column-span:all; text-align:center; padding:20px;">Loading...</p>');
 
-            try {
-                let data, error;
-                if (currentMode === 'random') {
-                    const res = await _supabase.rpc('get_random_videos');
-                    data = res.data; error = res.error;
-                } else {
-                    let query = _supabase.from('videos').select('*');
-                    if (currentPeriod === '1d') query = query.gte('created_at', new Date(Date.now() - 86400000).toISOString());
-                    if (currentPeriod === '3d') query = query.gte('created_at', new Date(Date.now() - 259200000).toISOString());
-                    
-                    if (currentMode === 'popular') query = query.order('save_count', { ascending: false });
-                    else query = query.order('created_at', { ascending: false }); // リアルタイム
+            let query = _supabase.from('videos').select('*').order('save_count', { ascending: false });
+            if (period === '1d') query = query.gte('created_at', new Date(Date.now() - 86400000).toISOString());
+            if (period === '3d') query = query.gte('created_at', new Date(Date.now() - 259200000).toISOString());
 
-                    const res = await query.limit(40);
-                    data = res.data; error = res.error;
-                }
+            const { data } = await query.limit(40);
+            if (!data || data.length === 0) { grid.html('<p style="column-span:all; text-align:center;">No data.</p>'); return; }
 
-                if (error || !data || data.length === 0) {
-                    grid.html('<p style="column-span:all; text-align:center;">No data found.</p>'); return;
-                }
-
-                const gridHtml = data.map((v, index) => `
-                    <div class="listn">
-                        <div class="rank-badge">No.${index + 1}</div>
-                        <a href="${v.tweet_url}" target="_blank" class="x-link-top"><i class="fab fa-x-twitter"></i></a>
-                        <a href="${v.video_url}" target="_blank" rel="noreferrer"><<img src="${encodeURI(v.thumbnail_url)}">
-                        <div class="tile-controls">
-                            <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
-                            <a href="index.html?v=${v.id}" class="name-badge">${v.title ? escapeHTML(v.title.substring(0,10)) : 'Video'}</a>
-                            <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
-                        </div>
+            grid.html(data.map((v, i) => `
+                <div class="listn">
+                    <div class="rank-badge">No.${i+1}</div>
+                    <a href="${v.tweet_url}" target="_blank" class="x-link-top"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="watch.html?url=${encodeURIComponent(v.video_url)}" target="_blank" rel="noreferrer">
+                        <img src="${v.thumbnail_url}">
+                    </a>
+                    <div class="tile-controls">
+                        <button class="icon-btn" onclick="handleVote(${v.id}, 'good', this)"><i class="fas fa-thumbs-up"></i></button>
+                        <a href="index.html?v=${v.id}" class="name-badge">${escapeHTML(v.title?.substring(0,10) || 'Video')}</a>
+                        <button class="icon-btn" onclick="handleVote(${v.id}, 'bad', this)"><i class="fas fa-thumbs-down"></i></button>
                     </div>
-                `).join('');
-                grid.html(gridHtml);
-            } catch (e) { console.error(e); }
-        }
-
-        // --- 4. 詳細ページの表示 ---
-async function showDetail(id) {
-    const { data: v } = await _supabase.from('videos').select('*').eq('id', id).single();
-    if (!v) { $('#contentArea').html('<p>Video not found.</p>'); return; }
-
-    // URLからユーザー名を抜き出す (例: https://x.com/username/status/... の 'username' 部分)
-    const username = v.tweet_url.split('/')[3] || "User";
-
-    const detailHtml = `
-        <div class="detail-view">
-            <div class="detail-left">
-                <img src="${encodeURI(v.thumbnail_url)}" class="detail-thumb">
-                <a href="${v.video_url}" target="_blank" class="watch-btn" rel="noreferrer"><i class="fas fa-play"></i> Watch</a>
-            </div>
-            <div class="detail-right">
-                ${v.title ? `<div class="tweet-text-content">${escapeHTML(v.title)}</div>` : ''}
-                <a href="${v.tweet_url}" target="_blank" class="action-btn">View tweet</a>
-                <a href="search.html?q=${encodeURIComponent(v.title || '')}" class="action-btn">Timeline</a>
-                <a href="javascript:void(0)" class="action-btn" onclick="vote(${v.id}, 'good')">Bookmark</a>
-                <a href="index.html" class="action-btn">Watch more</a>
-                <a href="javascript:void(0)" class="action-btn btn-red" onclick="alert('Reported')"><i class="fas fa-flag"></i> Report abuse</a>
-            </div>
-        </div>
-        <!-- 関連動画を表示するエリアを追記 -->
-        <div id="relatedSection">
-            <h3 class="related-title">Other videos by @${username}</h3>
-            <div id="relatedGrid" class="video-grid">
-                <p style="column-span:all; text-align:center; padding:20px;">Loading related videos...</p>
-            </div>
-        </div>
-    `;
-    $('#contentArea').html(detailHtml);
-
-    // 同じ投稿者の他の動画を探して表示する
-    fetchRelatedVideos(username, v.id);
-}
-
-// --- 関連動画を取得する補助関数 ---
-async function fetchRelatedVideos(username, currentId) {
-    try {
-        const { data } = await _supabase
-            .from('videos')
-            .select('*')
-            .ilike('tweet_url', `%/${username}/%`) // URLにユーザー名が含まれるものを検索
-            .neq('id', currentId) // 今表示している動画は除く
-            .order('created_at', { ascending: false })
-            .limit(10); // 最大10件
-
-        if (!data || data.length === 0) {
-            $('#relatedSection').hide(); // 他に動画がない場合はセクションを隠す
-            return;
-        }
-
-        const gridHtml = data.map((v, index) => `
-            <div class="listn">
-                <a href="${v.tweet_url}" target="_blank" class="x-link-top"><i class="fab fa-x-twitter"></i></a>
-                <a href="index.html?v=${v.id}"><img src="${encodeURI(v.thumbnail_url)}">
-                <div class="tile-controls">
-                    <button class="icon-btn" onclick="vote(${v.id}, 'good')"><i class="fas fa-thumbs-up"></i></button>
-                    <a href="index.html?v=${v.id}" class="name-badge">${v.title ? v.title.substring(0,10) : 'Video'}</a>
-                    <button class="icon-btn" onclick="vote(${v.id}, 'bad')"><i class="fas fa-thumbs-down"></i></button>
                 </div>
-            </div>
-        `).join('');
-        $('#relatedGrid').html(gridHtml);
-    } catch (e) {
-        console.error("Related error:", e);
-        $('#relatedSection').hide();
-    }
-}
+            `).join(''));
+        }
 
-        // --- 5. 投票処理 ---
-        async function vote(id, type) {
-            // 1. ブラウザの記憶（LocalStorage）から「投票済みIDリスト」を取り出す
-            const votedList = JSON.parse(localStorage.getItem('voted_video_ids') || '[]');
+        // --- 詳細ページ表示処理 ---
+        async function showDetail(id) {
+            const { data: v } = await _supabase.from('videos').select('*').eq('id', id).single();
+            if (!v) { $('#contentArea').html('<p>Not found.</p>'); return; }
 
-            // 2. この動画IDがすでにリストにあれば、処理を中断する
-            if (votedList.includes(id)) {
-                alert("この動画には既に投票済みです。");
-                return;
-            }
-
-            // 3. 投票処理を実行
-            const col = type === 'good' ? 'good_count' : 'bad_count';
-            const { error } = await _supabase.rpc('increment_vote', { row_id: id, col_name: col });
-
-            if (!error) {
-                // 4. 成功したら、リストにこの動画IDを追加してブラウザに保存する
-                votedList.push(id);
-                localStorage.setItem('voted_video_ids', JSON.stringify(votedList));
-                
-                alert("投票ありがとうございます！");
-                
-                // 5. 画面を更新して最新のカウントを表示する（任意）
-                location.reload(); 
-            } else {
-                alert("投票に失敗しました。再度お試しください。");
-            }
+            $('#contentArea').html(`
+                <div class="detail-view">
+                    <div class="detail-left">
+                        <img src="${v.thumbnail_url}" class="detail-thumb">
+                        <a href="watch.html?url=${encodeURIComponent(v.video_url)}" class="watch-btn"><i class="fas fa-play"></i> Watch</a>
+                    </div>
+                    <div class="detail-right">
+                        ${v.title ? `<div class="tweet-text-content">${escapeHTML(v.title)}</div>` : ''}
+                        <a href="${v.tweet_url}" target="_blank" class="action-btn">View tweet</a>
+                        <a href="index.html" class="action-btn">Back to Ranking</a>
+                    </div>
+                </div>
+            `);
         }
     </script>
 </body>
