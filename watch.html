@@ -3,20 +3,49 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer"> <!-- Twitterブロック回避の魔法の1行 -->
     <title>Watch Video</title>
     <style>
+        /* 画面を黒一色にして、中央に動画を配置 */
         body { margin: 0; background: #000; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        video { width: 100%; max-width: 600px; display: block; }
+        
+        /* iPhoneの強制全画面を防ぐ設定 */
+        video { 
+            width: 100%; 
+            max-width: 600px; 
+            display: block; 
+            background: #000;
+        }
+
+        /* 戻るボタンを画面上に配置（UX向上のため） */
+        .back-btn {
+            position: fixed; top: 10px; left: 10px;
+            background: rgba(0,0,0,0.5); color: #fff; padding: 8px 15px;
+            border-radius: 4px; text-decoration: none; font-size: 14px; z-index: 100;
+        }
     </style>
 </head>
 <body>
+    <a href="javascript:history.back()" class="back-btn"><i class="fas fa-chevron-left"></i> Back</a>
+    
+    <!-- playsinline は iPhone で全画面になるのを防ぐために必須です -->
     <video id="vid" controls autoplay playsinline></video>
+
     <script>
         // URLのパラメータから動画URLを取得して再生
         const params = new URLSearchParams(window.location.search);
         const url = params.get('url');
-        if(url) {
-            document.getElementById('vid').src = decodeURIComponent(url);
+        
+        if (url) {
+            const videoElement = document.getElementById('vid');
+            videoElement.src = decodeURIComponent(url);
+            
+            // エラー時の処理
+            videoElement.onerror = () => {
+                alert("動画の読み込みに失敗しました。URLの期限切れの可能性があります。");
+            };
+        } else {
+            document.body.innerHTML = '<p style="color:white; text-align:center;">URLが指定されていません。</p>';
         }
     </script>
 </body>
